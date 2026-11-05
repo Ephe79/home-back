@@ -222,7 +222,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     <div class="legend" id="legend"></div>
     <svg class="map" id="mapWorld" viewBox="0 0 400 230" role="img" aria-label="蒙特利尔到卡萨布兰卡到北京的航线示意图"></svg>
     <svg class="map" id="mapBJ" viewBox="0 0 400 330" role="img" aria-label="北京大兴机场到北京西站到鹤壁东站的高铁示意图"></svg>
-    <p class="note">示意图，不按比例。点击任何地点，会在手机上的谷歌地图里打开。红点是按时刻表推算出的当前位置。</p>
+    <p class="note">示意图，不按比例。点击地点会在手机的地图里打开：国外用谷歌地图，北京和鹤壁用百度地图，点卡萨布兰卡会显示 T2 到 T1 的步行路线。红点是按时刻表推算出的当前位置。</p>
   </section>
 
   <div id="days" style="display:contents"></div>
@@ -279,17 +279,20 @@ details.route[open] > summary::after { content: "收起 ▴"; }
   /* ---------- 地点 ---------- */
   var P = {
     home: { n: "900 rue Saint-Jacques", a: "900 rue Saint-Jacques, Montréal, QC, Canada", q: "900 rue Saint-Jacques, Montréal", ll: "45.5017,-73.5673" },
-    yul: { n: "蒙特利尔-特鲁多国际机场 YUL", a: "975 Boulevard Roméo-Vachon Nord, Dorval, QC H4Y 1H1, Canada", q: "Montréal-Pierre Elliott Trudeau International Airport", gq: "Montréal–Trudeau International Airport (YUL)", ll: "45.4706,-73.7408", pin: 1 },
-    cmn2: { n: "卡萨布兰卡穆罕默德五世国际机场 T2", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 2）", q: "Aéroport Mohammed V Casablanca Terminal 2", gq: "Mohammed V International Airport Terminal 2, Casablanca", ll: "33.3675,-7.5898", pin: 1 },
-    cmn1: { n: "卡萨布兰卡穆罕默德五世国际机场 T1", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 1）", q: "Aéroport Mohammed V Casablanca Terminal 1", gq: "Mohammed V International Airport Terminal 1, Casablanca", ll: "33.3675,-7.5898", pin: 1 },
-    pkx: { n: "北京大兴国际机场 PKX", a: "北京市大兴区，北京大兴国际机场", q: "北京大兴国际机场", gq: "Beijing Daxing International Airport", ll: "39.5098,116.4105", pin: 1 },
-    pkxs: { n: "大兴机场站（京雄城际）", a: "北京大兴国际机场旁，离航站楼步行约 150 米", q: "大兴机场站", gq: "Daxing Airport Railway Station, Beijing", ll: "39.5098,116.4105", pin: 1 },
-    bjw: { n: "北京西站", a: "北京市丰台区莲花池东路 118 号", q: "北京西站", gq: "Beijing West Railway Station", ll: "39.8946,116.3220", pin: 1 },
-    hebi: { n: "鹤壁东站", a: "河南省鹤壁市淇滨区朝歌路", q: "鹤壁东站", gq: "Hebi East Railway Station", ll: "35.7478,114.2974" }
+    yul: { n: "蒙特利尔-特鲁多国际机场 YUL", a: "975 Boulevard Roméo-Vachon Nord, Dorval, QC H4Y 1H1, Canada", q: "Montréal-Pierre Elliott Trudeau International Airport", gq: "Montréal–Trudeau International Airport (YUL)", ll: "45.4706,-73.7408" },
+    cmn2: { n: "卡萨布兰卡穆罕默德五世国际机场 T2", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 2）", q: "Aéroport Mohammed V Casablanca Terminal 2", gq: "Mohammed V International Airport Terminal 2, Casablanca", ll: "33.3675,-7.5898" },
+    cmn1: { n: "卡萨布兰卡穆罕默德五世国际机场 T1", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 1）", q: "Aéroport Mohammed V Casablanca Terminal 1", gq: "Mohammed V International Airport Terminal 1, Casablanca", ll: "33.3675,-7.5898" },
+    pkx: { n: "北京大兴国际机场 PKX", a: "北京市大兴区，北京大兴国际机场", q: "北京大兴国际机场", gq: "Beijing Daxing International Airport", bd: ["北京大兴国际机场", "北京"], ll: "39.5098,116.4105" },
+    pkxs: { n: "大兴机场站（京雄城际）", a: "北京大兴国际机场旁，离航站楼步行约 150 米", q: "大兴机场站", gq: "Daxing Airport Railway Station, Beijing", bd: ["大兴机场站", "北京"], ll: "39.5098,116.4105" },
+    bjw: { n: "北京西站", a: "北京市丰台区莲花池东路 118 号", q: "北京西站", gq: "Beijing West Railway Station", bd: ["北京西站", "北京"], ll: "39.8946,116.3220" },
+    hebi: { n: "鹤壁东站", a: "河南省鹤壁市淇滨区朝歌路", q: "鹤壁东站", gq: "Hebi East Railway Station", bd: ["鹤壁东站", "鹤壁"], ll: "35.7478,114.2974" }
   };
   function gmap(p) { return "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(p.gq || p.q); }
   function gsearch(p) { return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.gq || p.q); }
-  function guru(p) { return "guru://search?q=" + encodeURIComponent(p.q) + "&coord=" + p.ll; }
+  function enc(x) { return encodeURIComponent(x); }
+  function groute(a, b) { return "https://www.google.com/maps/dir/?api=1&origin=" + enc(a.gq) + "&destination=" + enc(b.gq) + "&travelmode=walking"; }
+  function bdDir(p) { return "baidumap://map/direction?destination=" + enc(p.bd[0]) + "&region=" + enc(p.bd[1]) + "&mode=driving&src=webapp.homeback.trip"; }
+  function bdSearch(p) { return "baidumap://map/place/search?query=" + enc(p.bd[0]) + "&region=" + enc(p.bd[1]) + "&src=webapp.homeback.trip"; }
 
   /* ---------- 路段颜色 ---------- */
   var LEGS = [
@@ -316,8 +319,8 @@ details.route[open] > summary::after { content: "收起 ▴"; }
   function clamp(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
   var I = { pkx: [300, 120], bjw: [250, 50], hebi: [120, 262] };
 
-  function stopNode(p, xy, label, sub, anchor, dx, dy) {
-    return '<a href="' + esc(gsearch(p)) + '" rel="noopener" aria-label="' + esc(label) + '"><circle class="stop" cx="' + xy[0] + '" cy="' + xy[1] + '" r="6"/><circle cx="' + xy[0] + '" cy="' + xy[1] + '" r="20" fill="transparent"/>' +
+  function stopNode(p, xy, label, sub, anchor, dx, dy, href) {
+    return '<a href="' + esc(href || gsearch(p)) + '" rel="noopener" aria-label="' + esc(label) + '"><circle class="stop" cx="' + xy[0] + '" cy="' + xy[1] + '" r="6"/><circle cx="' + xy[0] + '" cy="' + xy[1] + '" r="20" fill="transparent"/>' +
       '<text class="lab" x="' + (xy[0] + dx) + '" y="' + (xy[1] + dy) + '" text-anchor="' + anchor + '">' + esc(label) + '</text>' +
       '<text class="lab2" x="' + (xy[0] + dx) + '" y="' + (xy[1] + dy + 17) + '" text-anchor="' + anchor + '">' + esc(sub) + '</text></a>';
   }
@@ -333,8 +336,8 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     s += '<path class="arc" d="' + q(A2) + '" style="stroke:var(--f2)"/><path id="a2on" class="arc-on" pathLength="100" d="' + q(A2) + '" style="stroke:var(--f2)" stroke-dasharray="0 100"/>';
     s += stopNode(P.home, W.home, "蒙特利尔市区", "900 rue Saint-Jacques", "start", -22, 30);
     s += stopNode(P.yul, W.yul, "YUL", "蒙特利尔机场", "start", 14, -8);
-    s += stopNode(P.cmn2, W.cmn, "CMN", "卡萨布兰卡", "middle", 0, 28);
-    s += stopNode(P.pkx, W.bj, "PKX", "北京大兴机场", "end", 12, 28);
+    s += stopNode(P.cmn2, W.cmn, "CMN", "T2 到 T1 路线", "middle", 0, 28, groute(P.cmn2, P.cmn1));
+    s += stopNode(P.pkx, W.bj, "PKX", "北京大兴机场", "end", 12, 28, bdSearch(P.pkx));
     s += '<g id="meW" class="me" style="display:none"><circle class="ring" r="9"/><circle class="core" r="6"/></g>';
     s += '<text class="lab2" x="112" y="150" text-anchor="middle">AT209 · 6 小时 35 分</text>';
     s += '<text class="lab2" x="272" y="150" text-anchor="middle">AT230 · 12 小时 35 分</text>';
@@ -344,9 +347,9 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     var s = grid(400, 330, 4, 3);
     s += '<path class="arc" d="M' + I.pkx + ' L' + I.bjw + '" style="stroke:var(--t1);opacity:.28"/><path id="b1on" class="arc-on" pathLength="100" d="M' + I.pkx + ' L' + I.bjw + '" style="stroke:var(--t1)" stroke-dasharray="0 100"/>';
     s += '<path class="arc" d="M' + I.bjw + ' L' + I.hebi + '" style="stroke:var(--t2);opacity:.28"/><path id="b2on" class="arc-on" pathLength="100" d="M' + I.bjw + ' L' + I.hebi + '" style="stroke:var(--t2)" stroke-dasharray="0 100"/>';
-    s += stopNode(P.bjw, I.bjw, "北京西站", "17:28 到 · 19:14 发", "end", -16, 6);
-    s += stopNode(P.pkxs, I.pkx, "大兴机场站", "16:54 发车 G3942", "end", -16, 6);
-    s += stopNode(P.hebi, I.hebi, "鹤壁东站", "22:01 到 G555", "start", 16, 6);
+    s += stopNode(P.bjw, I.bjw, "北京西站", "17:28 到 · 19:14 发", "end", -16, 6, bdSearch(P.bjw));
+    s += stopNode(P.pkxs, I.pkx, "大兴机场站", "16:54 发车 G3942", "end", -16, 6, bdSearch(P.pkxs));
+    s += stopNode(P.hebi, I.hebi, "鹤壁东站", "22:01 到 G555", "start", 16, 6, bdSearch(P.hebi));
     s += '<text class="lab2" x="388" y="316" text-anchor="end">北京时间 UTC+8</text>';
     s += '<g id="meB" class="me" style="display:none"><circle class="ring" r="12"/><circle class="core" r="9"/></g>';
     document.getElementById("mapBJ").innerHTML = s;
@@ -381,7 +384,13 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     if (o.p) h += '<span class="addr">' + esc(o.p.a) + '</span>';
     if (z !== "bj") { var sh = dayShift(o.t, z, "bj"); h += '<span class="bjt">北京时间 ' + md(o.t, "bj") + ' ' + hm(o.t, "bj") + '</span>'; }
     h += '<span class="here">现在在这里</span>';
-    if (o.p) h += '<div class="acts"><a class="btn go" rel="noopener" href="' + esc(gmap(o.p)) + '">谷歌地图导航</a><a class="btn" href="' + esc(guru(o.p)) + '">探途</a><button class="btn" type="button" data-copy="' + esc(o.p.a) + '">复制地址</button></div>';
+    if (o.p) {
+      var gl = '<a class="btn" rel="noopener" href="' + esc(gmap(o.p)) + '">谷歌地图导航</a>', cp = '<button class="btn" type="button" data-copy="' + esc(o.p.a) + '">复制地址</button>', bt;
+      if (o.route) bt = '<a class="btn go" rel="noopener" href="' + esc(groute(P.cmn2, P.cmn1)) + '">T2 → T1 步行路线</a>' + gl;
+      else if (o.p.bd) bt = '<a class="btn go" href="' + esc(bdDir(o.p)) + '">百度地图导航</a>' + gl;
+      else bt = gl.replace('class="btn"', 'class="btn go"');
+      h += '<div class="acts">' + bt + cp + '</div>';
+    }
     return h + '</div></li>';
   }
   function tkt(o) {
@@ -416,14 +425,14 @@ details.route[open] > summary::after { content: "收起 ▴"; }
         ]
       }],
       wx: [["d1", "蒙特利尔当天天气"]],
-      tips: ["护照、登机牌电子版、充电宝（只能随身，不能托运）、药品放在随身包", "保暖衣物穿在身上，到卡萨布兰卡会热，厚外套要能塞进随身包", "机舱偏冷，带一件薄外套或围巾", "手机和探途离线地图提前下载，出发前把行程页打开一次"],
+      tips: ["护照、登机牌电子版、充电宝（只能随身，不能托运）、药品放在随身包", "保暖衣物穿在身上，到卡萨布兰卡会热，厚外套要能塞进随身包", "机舱偏冷，带一件薄外套或围巾", "手机上的离线地图提前下载，出发前把行程页打开一次"],
       warns: ["值机时当面确认：两段航班的登机牌都已打印，行李牌终点是北京 PKX。截图显示转机行李直挂，仍请现场核实", "蒙特利尔现在是冬令时，UTC−5"]
     },
     {
       id: "d2", t: E.arr1, z: "cmn", title: "卡萨布兰卡转机",
       nodes: [
         { t: E.arr1, z: "cmn", c: "var(--f1)", title: "AT209 落地 CMN T2", desc: "按“转机 / Correspondance”指示走，行李直挂", p: P.cmn2 },
-        { t: E.t1, z: "cmn", c: "var(--xfer)", title: "建议此时前转到 T1", desc: "留足时间找 T1，再安检，登机口开前不用急", p: P.cmn1 },
+        { t: E.t1, z: "cmn", c: "var(--xfer)", title: "建议此时前转到 T1", desc: "留足时间找 T1，再安检，登机口开前不用急", route: 1, p: P.cmn1 },
         { t: E.dep2, z: "cmn", c: "var(--f2)", title: "AT230 起飞", desc: "飞往北京大兴，12 小时 35 分" }
       ],
       tickets: [{
@@ -438,7 +447,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
         ]
       }],
       wx: [["d2", "卡萨布兰卡当天天气"]],
-      tips: ["换一身轻便衣服：T 恤加薄外套，把冬装收进随身包", "机上 12 小时多：袜子、颈枕、眼罩、保湿，水杯过安检后接水", "转机 7 小时，充电宝充好，下载好离线内容", "过北京入境前，把入境所需资料先准备好，放在随身包"],
+      tips: ["换一身轻便衣服：T 恤加薄外套，把冬装收进随身包", "机上 12 小时多：袜子、颈枕、眼罩、保湿，水杯过安检后接水", "转机 7 小时 05 分，属于航司 4 到 8 小时档，页面显示可凭登机牌在机场餐厅免费用餐一次，以现场为准", "过北京入境前，把入境所需资料先准备好，放在随身包"],
       warns: ["卡萨布兰卡当地时间是 UTC+0，所有航班时间都是当地时间", "T2 到 T1 的走法没有官方资料：落地后看指示牌或问地勤，预留至少 1 小时", "是否要办摩洛哥入境，取决于护照和航司安排：不确定就在 T2 向地勤确认，不要自己出关"]
     },
     {
@@ -547,7 +556,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     { id: "jd", t: "向京东确认大兴机场邮寄点营业时间、价格、寄到鹤壁的时效", n: "位置：到达层出来往右走，路过“米村拌饭”（他人转述，现场核实）。页面按 70 到 90 分钟估算" },
     { id: "transit", t: "核对卡萨布兰卡转机要求", n: "在航司官网确认，护照不同要求不同" },
     { id: "bag", t: "值机时确认两段登机牌和行李牌终点", n: "行李牌终点应是北京 PKX" },
-    { id: "maps", t: "下载离线地图：谷歌地图下载蒙特利尔、卡萨布兰卡，探途下载北京、河南鹤壁", n: "断网前下载完，并打开一次确认能搜到地点" },
+    { id: "maps", t: "下载离线地图：谷歌地图下载蒙特利尔、卡萨布兰卡，百度地图下载北京、鹤壁", n: "断网前下载完，并打开一次确认能搜到地点" },
     { id: "save", t: "把行程单、车票截图存到手机相册", n: "离线可看，二维码不要发到公开页" },
     { id: "pack", t: "按天气准备衣物，充电宝放在随身包", n: "见每日的提醒" },
     { id: "share", t: "把本页网址发给家人", n: "他们能看到按时刻表推算的位置" }
