@@ -290,6 +290,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
   function gmap(p) { return "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(p.gq || p.q); }
   function gsearch(p) { return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.gq || p.q); }
   function enc(x) { return encodeURIComponent(x); }
+  var BD_GATE = "https://map.baidu.com/?newmap=1&s=walk%26c%3D191%26sn%3D1%2524%2524%2524%252412960299%252C4768905%2524%2524%25E5%258C%2597%25E4%25BA%25AC%25E5%25A4%25A7%25E5%2585%25B4%25E5%259B%25BD%25E9%2599%2585%25E6%259C%25BA%25E5%259C%25BA%25E8%2588%25AA%25E7%25AB%2599%25E6%25A5%25BC-1F%25E5%259B%25BD%25E9%2599%2585%252F%25E6%25B8%25AF%25E6%25BE%25B3%25E5%258F%25B0%25E5%2588%25B0%25E8%25BE%25BE%2524%25240%2524%2524%2524%2524%26en%3D1%2524%2524%2524%252412960339%252C4768701%2524%2524%25E5%25A4%25A7%25E5%2585%25B4%25E6%259C%25BA%25E5%259C%25BA%25E7%25AB%2599%2524%25240%2524%2524%2524%2524&sharecallbackflag=footRoute";
   var CMN_ROUTE = "https://www.google.com/maps/dir/Terminal+1,+Rte+de+Nouasseur,+Nouaceur,+%E6%91%A9%E6%B4%9B%E5%93%A5/Terminal+2,+Rte+de+Nouasseur,+Nouaceur,+%E6%91%A9%E6%B4%9B%E5%93%A5/@33.3737464,-7.5821621,18z/data=!3m1!4b1!4m14!4m13!1m5!1m1!1s0xda63a9a7fd4e5ed:0xc7f936e5cb8a70fa!2m2!1d-7.581594!2d33.3750276!1m5!1m1!1s0xda63a904b716ce9:0xf4ec065e8fc09ff1!2m2!1d-7.580512!2d33.3722888!3e2?entry=ttu&g_ep=EgoyMDI2MTEwMi4wIKXMDSoASAFQAw%3D%3D";
   function bdDir(p) { return "baidumap://map/direction?destination=" + enc(p.bd[0]) + "&region=" + enc(p.bd[1]) + "&mode=driving&src=webapp.homeback.trip"; }
   function bdSearch(p) { return "baidumap://map/place/search?query=" + enc(p.bd[0]) + "&region=" + enc(p.bd[1]) + "&src=webapp.homeback.trip"; }
@@ -387,7 +388,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     if (o.p) {
       var gl = '<a class="btn" rel="noopener" href="' + esc(gmap(o.p)) + '">谷歌地图导航</a>', cp = '<button class="btn" type="button" data-copy="' + esc(o.p.a) + '">复制地址</button>', bt;
       if (o.route) bt = '<a class="btn go" rel="noopener" href="' + esc(CMN_ROUTE) + '">T1 与 T2 步行路线</a>' + gl;
-      else if (o.p.bd) bt = '<a class="btn go" href="' + esc(bdDir(o.p)) + '">百度地图导航</a>' + gl;
+      else if (o.p.bd) bt = '<a class="btn go" href="' + esc(o.bdUrl || bdDir(o.p)) + '">' + esc(o.bdLabel || "百度地图导航") + '</a>' + gl;
       else bt = gl.replace('class="btn"', 'class="btn go"');
       h += '<div class="acts">' + bt + cp + '</div>';
     }
@@ -455,7 +456,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
       nodes: [
         { t: E.arr2, z: "bj", c: "var(--f2)", title: "AT230 落地大兴机场", desc: "入境、海关、取行李，预计 12:15 到 14:35 办完", p: P.pkx },
         { t: E.jd, z: "bj", c: "var(--xfer)", title: "最晚此时开始京东邮寄", desc: "在机场内办理，约 70 到 90 分钟", note: "位置：从到达层出来往右走，路过“米村拌饭”就是京东邮寄点（他人转述，以现场为准）", p: P.pkx },
-        { t: E.gate, z: "bj", c: "var(--t1)", title: "最晚到大兴机场站检票口", desc: "发车前 20 分钟，要先过车站安检", p: P.pkxs },
+        { t: E.gate, z: "bj", c: "var(--t1)", title: "最晚到大兴机场站检票口", desc: "发车前 20 分钟，要先过车站安检", bdUrl: BD_GATE, bdLabel: "百度地图：到达层步行到大兴机场站", p: P.pkxs },
         { t: E.g3942, z: "bj", c: "var(--t1)", title: "G3942 发车", desc: "34 分钟到北京西", p: P.pkxs },
         { t: E.bjw, z: "bj", c: "var(--xfer)", title: "到达北京西站", desc: "出站、安检、检票。距 G555 还有 1 小时 46 分", p: P.bjw },
         { t: E.g555, z: "bj", c: "var(--t2)", title: "G555 发车", desc: "2 小时 47 分到鹤壁东", p: P.bjw },
