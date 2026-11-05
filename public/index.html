@@ -125,6 +125,9 @@ details.route[open] > summary::after { content: "收起 ▴"; }
 .n .body b { font-size: 15px; line-height: 1.4; }
 .n .desc { font-size: 13px; color: var(--mut); }
 .n .addr { font-size: 12.5px; color: var(--mut); overflow-wrap: anywhere; }
+.n .cdn { font: 12px/1.4 var(--mono); color: var(--mut); }
+.n.is-next .cdn { color: var(--t2); font-weight: 700; }
+.cdt { font-weight: 700; }
 .n .bjt { font: 11.5px/1.4 var(--mono); color: var(--mut); }
 .n.is-done .dot { background: var(--c, var(--xfer)); }
 .n.is-done .body b { color: var(--mut); }
@@ -219,7 +222,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     <div class="legend" id="legend"></div>
     <svg class="map" id="mapWorld" viewBox="0 0 400 230" role="img" aria-label="蒙特利尔到卡萨布兰卡到北京的航线示意图"></svg>
     <svg class="map" id="mapBJ" viewBox="0 0 400 330" role="img" aria-label="北京大兴机场到北京西站到鹤壁东站的高铁示意图"></svg>
-    <p class="note">示意图，不按比例。点击任何地点，会在手机上的探途离线地图里打开。红点是按时刻表推算出的当前位置。</p>
+    <p class="note">示意图，不按比例。点击任何地点，会在手机上的谷歌地图里打开。红点是按时刻表推算出的当前位置。</p>
   </section>
 
   <div id="days" style="display:contents"></div>
@@ -276,15 +279,16 @@ details.route[open] > summary::after { content: "收起 ▴"; }
   /* ---------- 地点 ---------- */
   var P = {
     home: { n: "900 rue Saint-Jacques", a: "900 rue Saint-Jacques, Montréal, QC, Canada", q: "900 rue Saint-Jacques, Montréal", ll: "45.5017,-73.5673" },
-    yul: { n: "蒙特利尔-特鲁多国际机场 YUL", a: "975 Boulevard Roméo-Vachon Nord, Dorval, QC H4Y 1H1, Canada", q: "Montréal-Pierre Elliott Trudeau International Airport", ll: "45.4706,-73.7408", pin: 1 },
-    cmn2: { n: "卡萨布兰卡穆罕默德五世国际机场 T2", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 2）", q: "Aéroport Mohammed V Casablanca Terminal 2", ll: "33.3675,-7.5898", pin: 1 },
-    cmn1: { n: "卡萨布兰卡穆罕默德五世国际机场 T1", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 1）", q: "Aéroport Mohammed V Casablanca Terminal 1", ll: "33.3675,-7.5898", pin: 1 },
-    pkx: { n: "北京大兴国际机场 PKX", a: "北京市大兴区，北京大兴国际机场", q: "北京大兴国际机场", ll: "39.5098,116.4105", pin: 1 },
-    pkxs: { n: "大兴机场站（京雄城际）", a: "北京大兴国际机场旁，离航站楼步行约 150 米", q: "大兴机场站", ll: "39.5098,116.4105", pin: 1 },
-    bjw: { n: "北京西站", a: "北京市丰台区莲花池东路 118 号", q: "北京西站", ll: "39.8946,116.3220", pin: 1 },
-    hebi: { n: "鹤壁东站", a: "河南省鹤壁市淇滨区朝歌路", q: "鹤壁东站", ll: "35.7478,114.2974" }
+    yul: { n: "蒙特利尔-特鲁多国际机场 YUL", a: "975 Boulevard Roméo-Vachon Nord, Dorval, QC H4Y 1H1, Canada", q: "Montréal-Pierre Elliott Trudeau International Airport", gq: "Montréal–Trudeau International Airport (YUL)", ll: "45.4706,-73.7408", pin: 1 },
+    cmn2: { n: "卡萨布兰卡穆罕默德五世国际机场 T2", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 2）", q: "Aéroport Mohammed V Casablanca Terminal 2", gq: "Mohammed V International Airport Terminal 2, Casablanca", ll: "33.3675,-7.5898", pin: 1 },
+    cmn1: { n: "卡萨布兰卡穆罕默德五世国际机场 T1", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 1）", q: "Aéroport Mohammed V Casablanca Terminal 1", gq: "Mohammed V International Airport Terminal 1, Casablanca", ll: "33.3675,-7.5898", pin: 1 },
+    pkx: { n: "北京大兴国际机场 PKX", a: "北京市大兴区，北京大兴国际机场", q: "北京大兴国际机场", gq: "Beijing Daxing International Airport", ll: "39.5098,116.4105", pin: 1 },
+    pkxs: { n: "大兴机场站（京雄城际）", a: "北京大兴国际机场旁，离航站楼步行约 150 米", q: "大兴机场站", gq: "Daxing Airport Railway Station, Beijing", ll: "39.5098,116.4105", pin: 1 },
+    bjw: { n: "北京西站", a: "北京市丰台区莲花池东路 118 号", q: "北京西站", gq: "Beijing West Railway Station", ll: "39.8946,116.3220", pin: 1 },
+    hebi: { n: "鹤壁东站", a: "河南省鹤壁市淇滨区朝歌路", q: "鹤壁东站", gq: "Hebi East Railway Station", ll: "35.7478,114.2974" }
   };
-  function guruPin(p) { return "guru://show?place=" + p.ll + ",16"; }
+  function gmap(p) { return "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(p.gq || p.q); }
+  function gsearch(p) { return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.gq || p.q); }
   function guru(p) { return "guru://search?q=" + encodeURIComponent(p.q) + "&coord=" + p.ll; }
 
   /* ---------- 路段颜色 ---------- */
@@ -313,7 +317,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
   var I = { pkx: [300, 120], bjw: [250, 50], hebi: [120, 262] };
 
   function stopNode(p, xy, label, sub, anchor, dx, dy) {
-    return '<a href="' + esc(guru(p)) + '" aria-label="' + esc(label) + '"><circle class="stop" cx="' + xy[0] + '" cy="' + xy[1] + '" r="6"/><circle cx="' + xy[0] + '" cy="' + xy[1] + '" r="20" fill="transparent"/>' +
+    return '<a href="' + esc(gsearch(p)) + '" rel="noopener" aria-label="' + esc(label) + '"><circle class="stop" cx="' + xy[0] + '" cy="' + xy[1] + '" r="6"/><circle cx="' + xy[0] + '" cy="' + xy[1] + '" r="20" fill="transparent"/>' +
       '<text class="lab" x="' + (xy[0] + dx) + '" y="' + (xy[1] + dy) + '" text-anchor="' + anchor + '">' + esc(label) + '</text>' +
       '<text class="lab2" x="' + (xy[0] + dx) + '" y="' + (xy[1] + dy + 17) + '" text-anchor="' + anchor + '">' + esc(sub) + '</text></a>';
   }
@@ -371,13 +375,13 @@ details.route[open] > summary::after { content: "收起 ▴"; }
   function node(o) {
     var z = o.z, h = '<li class="n" data-t="' + o.t + '" style="--c:' + o.c + '">';
     h += '<span class="time">' + hm(o.t, z) + '<small>' + Z[z].utc + '</small></span><span class="rail"><i class="dot"></i></span><div class="body">';
-    h += '<b>' + esc(o.title) + '</b>';
+    h += '<b>' + esc(o.title) + '</b><span class="cdn" data-cd="' + o.t + '" data-pre="距此还有 " data-past="已过"></span>';
     if (o.desc) h += '<span class="desc">' + esc(o.desc) + '</span>';
     if (o.note) h += '<span class="note">' + esc(o.note) + '</span>';
     if (o.p) h += '<span class="addr">' + esc(o.p.a) + '</span>';
     if (z !== "bj") { var sh = dayShift(o.t, z, "bj"); h += '<span class="bjt">北京时间 ' + md(o.t, "bj") + ' ' + hm(o.t, "bj") + '</span>'; }
     h += '<span class="here">现在在这里</span>';
-    if (o.p) h += '<div class="acts"><a class="btn go" href="' + esc(guru(o.p)) + '">在探途中打开</a>' + (o.p.pin ? '<a class="btn" href="' + esc(guruPin(o.p)) + '">按坐标定位</a>' : '') + '<button class="btn" type="button" data-copy="' + esc(o.p.a) + '">复制地址</button></div>';
+    if (o.p) h += '<div class="acts"><a class="btn go" rel="noopener" href="' + esc(gmap(o.p)) + '">谷歌地图导航</a><a class="btn" href="' + esc(guru(o.p)) + '">探途</a><button class="btn" type="button" data-copy="' + esc(o.p.a) + '">复制地址</button></div>';
     return h + '</div></li>';
   }
   function tkt(o) {
@@ -386,7 +390,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     h += '<div class="mid"><b>' + dur(o.t1 - o.t0) + '</b>→</div>';
     var sh = dayShift(o.t1, o.z1, o.z0);
     h += '<div class="end r"><span class="t">' + hm(o.t1, o.z1) + '</span><span class="dt">' + mdw(o.t1, o.z1) + ' · ' + Z[o.z1].utc + '</span><span class="ap">' + esc(o.c1) + '</span><span class="an">' + esc(o.n1) + '</span></div></div>';
-    h += '<dl>' + o.rows.map(function (r) { return '<dt>' + esc(r[0]) + '</dt><dd>' + r[1] + '</dd>'; }).join("") + '</dl>';
+    h += '<dl><dt>倒计时</dt><dd class="mono cdt" data-cd="' + o.t0 + '" data-pre="距出发 " data-past="已出发"></dd>' + o.rows.map(function (r) { return '<dt>' + esc(r[0]) + '</dt><dd>' + r[1] + '</dd>'; }).join("") + '</dl>';
     return h + '</article>';
   }
   function wxBlock(id, title) { return '<div class="wx"><h3 style="font-size:14px">' + esc(title) + '</h3><div data-wx="' + id + '"></div></div>'; }
@@ -543,7 +547,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     { id: "jd", t: "向京东确认大兴机场邮寄点营业时间、价格、寄到鹤壁的时效", n: "位置：到达层出来往右走，路过“米村拌饭”（他人转述，现场核实）。页面按 70 到 90 分钟估算" },
     { id: "transit", t: "核对卡萨布兰卡转机要求", n: "在航司官网确认，护照不同要求不同" },
     { id: "bag", t: "值机时确认两段登机牌和行李牌终点", n: "行李牌终点应是北京 PKX" },
-    { id: "maps", t: "在探途下载离线地图：蒙特利尔、卡萨布兰卡、北京、河南鹤壁", n: "断网前下载完，并打开一次确认可搜到地点" },
+    { id: "maps", t: "下载离线地图：谷歌地图下载蒙特利尔、卡萨布兰卡，探途下载北京、河南鹤壁", n: "断网前下载完，并打开一次确认能搜到地点" },
     { id: "save", t: "把行程单、车票截图存到手机相册", n: "离线可看，二维码不要发到公开页" },
     { id: "pack", t: "按天气准备衣物，充电宝放在随身包", n: "见每日的提醒" },
     { id: "share", t: "把本页网址发给家人", n: "他们能看到按时刻表推算的位置" }
@@ -593,9 +597,9 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     document.getElementById("bar").innerHTML = SEG.map(function (s) { return '<i style="width:' + ((s[1] - s[0]) / tot * 100) + '%;background:' + s[2] + '"></i>'; }).join("");
   }
   function cdText(ms) {
-    if (ms <= 0) return "0 分";
-    var d = Math.floor(ms / 86400000), h = Math.floor(ms % 86400000 / 3600000), m = Math.floor(ms % 3600000 / MIN), s = Math.floor(ms % MIN / 1000);
-    return (d ? d + " 天 " : "") + (d || h ? p2(h) + " 时 " : "") + p2(m) + " 分" + (d ? "" : " " + p2(s) + " 秒");
+    if (ms <= 0) return "0 秒";
+    var d = Math.floor(ms / 86400000), h = Math.floor(ms % 86400000 / 3600000), m = Math.floor(ms % 3600000 / MIN), sec = Math.floor(ms % MIN / 1000);
+    return (d ? d + " 天 " : "") + (d || h ? p2(h) + " 时 " : "") + p2(m) + " 分 " + p2(sec) + " 秒";
   }
 
   /* ---------- 每秒更新 ---------- */
@@ -648,6 +652,14 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     dash("b1on", clamp((now - E.g3942) / (E.bjw - E.g3942)));
     dash("b2on", clamp((now - E.g555) / (E.home - E.g555)));
 
+    /* 所有节点和车票上的倒计时 */
+    var cds = document.querySelectorAll("[data-cd]");
+    for (var k = 0; k < cds.length; k++) {
+      var ms = +cds[k].getAttribute("data-cd") - now;
+      var tx = ms <= 0 ? cds[k].getAttribute("data-past") : cds[k].getAttribute("data-pre") + cdText(ms);
+      if (cds[k].textContent !== tx) cds[k].textContent = tx;
+    }
+
     /* 每日路线图：已过、当前 */
     var lis = document.querySelectorAll(".n"), cur = -1, i;
     for (i = 0; i < lis.length; i++) if (+lis[i].getAttribute("data-t") <= now) cur = i;
@@ -655,6 +667,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
       var done = +lis[i].getAttribute("data-t") <= now;
       lis[i].classList.toggle("is-done", done && i !== cur);
       lis[i].classList.toggle("is-now", i === cur && now < E.home + 6 * 3600000);
+      lis[i].classList.toggle("is-next", i === cur + 1);
     }
     var days = document.querySelectorAll(".day"), idx = -1;
     for (i = 0; i < DAYS.length; i++) if (now >= DAYS[i].t && (i === DAYS.length - 1 || now < DAYS[i + 1].t)) idx = i;
