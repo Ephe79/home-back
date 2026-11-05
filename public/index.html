@@ -222,7 +222,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     <div class="legend" id="legend"></div>
     <svg class="map" id="mapWorld" viewBox="0 0 400 230" role="img" aria-label="蒙特利尔到卡萨布兰卡到北京的航线示意图"></svg>
     <svg class="map" id="mapBJ" viewBox="0 0 400 330" role="img" aria-label="北京大兴机场到北京西站到鹤壁东站的高铁示意图"></svg>
-    <p class="note">示意图，不按比例。点击地点会在手机的地图里打开：国外用谷歌地图，北京和鹤壁用百度地图，点卡萨布兰卡会显示 T2 到 T1 的步行路线。红点是按时刻表推算出的当前位置。</p>
+    <p class="note">示意图，不按比例。点击地点会在手机的地图里打开：国外用谷歌地图，北京和鹤壁用百度地图，点卡萨布兰卡会显示 T1 与 T2 之间的步行路线。红点是按时刻表推算出的当前位置。</p>
   </section>
 
   <div id="days" style="display:contents"></div>
@@ -290,7 +290,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
   function gmap(p) { return "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(p.gq || p.q); }
   function gsearch(p) { return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.gq || p.q); }
   function enc(x) { return encodeURIComponent(x); }
-  function groute(a, b) { return "https://www.google.com/maps/dir/?api=1&origin=" + enc(a.gq) + "&destination=" + enc(b.gq) + "&travelmode=walking"; }
+  var CMN_ROUTE = "https://www.google.com/maps/dir/Terminal+1,+Rte+de+Nouasseur,+Nouaceur,+%E6%91%A9%E6%B4%9B%E5%93%A5/Terminal+2,+Rte+de+Nouasseur,+Nouaceur,+%E6%91%A9%E6%B4%9B%E5%93%A5/@33.3737464,-7.5821621,18z/data=!3m1!4b1!4m14!4m13!1m5!1m1!1s0xda63a9a7fd4e5ed:0xc7f936e5cb8a70fa!2m2!1d-7.581594!2d33.3750276!1m5!1m1!1s0xda63a904b716ce9:0xf4ec065e8fc09ff1!2m2!1d-7.580512!2d33.3722888!3e2?entry=ttu&g_ep=EgoyMDI2MTEwMi4wIKXMDSoASAFQAw%3D%3D";
   function bdDir(p) { return "baidumap://map/direction?destination=" + enc(p.bd[0]) + "&region=" + enc(p.bd[1]) + "&mode=driving&src=webapp.homeback.trip"; }
   function bdSearch(p) { return "baidumap://map/place/search?query=" + enc(p.bd[0]) + "&region=" + enc(p.bd[1]) + "&src=webapp.homeback.trip"; }
 
@@ -336,7 +336,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     s += '<path class="arc" d="' + q(A2) + '" style="stroke:var(--f2)"/><path id="a2on" class="arc-on" pathLength="100" d="' + q(A2) + '" style="stroke:var(--f2)" stroke-dasharray="0 100"/>';
     s += stopNode(P.home, W.home, "蒙特利尔市区", "900 rue Saint-Jacques", "start", -22, 30);
     s += stopNode(P.yul, W.yul, "YUL", "蒙特利尔机场", "start", 14, -8);
-    s += stopNode(P.cmn2, W.cmn, "CMN", "T2 到 T1 路线", "middle", 0, 28, groute(P.cmn2, P.cmn1));
+    s += stopNode(P.cmn2, W.cmn, "CMN", "T1 与 T2 步行路线", "middle", 0, 28, CMN_ROUTE);
     s += stopNode(P.pkx, W.bj, "PKX", "北京大兴机场", "end", 12, 28, bdSearch(P.pkx));
     s += '<g id="meW" class="me" style="display:none"><circle class="ring" r="9"/><circle class="core" r="6"/></g>';
     s += '<text class="lab2" x="112" y="150" text-anchor="middle">AT209 · 6 小时 35 分</text>';
@@ -386,7 +386,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     h += '<span class="here">现在在这里</span>';
     if (o.p) {
       var gl = '<a class="btn" rel="noopener" href="' + esc(gmap(o.p)) + '">谷歌地图导航</a>', cp = '<button class="btn" type="button" data-copy="' + esc(o.p.a) + '">复制地址</button>', bt;
-      if (o.route) bt = '<a class="btn go" rel="noopener" href="' + esc(groute(P.cmn2, P.cmn1)) + '">T2 → T1 步行路线</a>' + gl;
+      if (o.route) bt = '<a class="btn go" rel="noopener" href="' + esc(CMN_ROUTE) + '">T1 与 T2 步行路线</a>' + gl;
       else if (o.p.bd) bt = '<a class="btn go" href="' + esc(bdDir(o.p)) + '">百度地图导航</a>' + gl;
       else bt = gl.replace('class="btn"', 'class="btn go"');
       h += '<div class="acts">' + bt + cp + '</div>';
