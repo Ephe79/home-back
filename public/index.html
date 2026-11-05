@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#eef1f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1527" media="(prefers-color-scheme: dark)">
+<title>回家之旅</title>
+<style>
+/* 布局：单列手机竖屏。顶部实时位置，其后总览图、每日行程（可展开路线图）、待办放在最后。 */
+:root {
+  --bg: #eef1f6; --card: #fcfdff; --ink: #18233d; --mut: #5b6784; --line: #d5dbe7; --soft: #e4e9f2;
+  --ground: #b9770e; --f1: #12766f; --f2: #3a4db5; --t1: #8a3fa6; --t2: #c4342b; --xfer: #6b7792;
+  --warn: #8a5400; --warn-bg: #f7e9cc; --ok: #12766f; --ok-bg: #d9ecea; --bad: #b3261e; --bad-bg: #f6dedb;
+  --sea: #e3eaf5;
+  --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+  --sans: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1527; --card: #182038; --ink: #e9edf7; --mut: #9aa7c4; --line: #2a3452; --soft: #222c49;
+    --ground: #f0b45a; --f1: #4ec5b9; --f2: #8b9cff; --t1: #cf8be6; --t2: #ff7a6c; --xfer: #8f9bb8;
+    --warn: #f0b95a; --warn-bg: #3d2f12; --ok: #4ec5b9; --ok-bg: #153a39; --bad: #ff8a80; --bad-bg: #4a2227;
+    --sea: #131c33; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1527; --card: #182038; --ink: #e9edf7; --mut: #9aa7c4; --line: #2a3452; --soft: #222c49;
+  --ground: #f0b45a; --f1: #4ec5b9; --f2: #8b9cff; --t1: #cf8be6; --t2: #ff7a6c; --xfer: #8f9bb8;
+  --warn: #f0b95a; --warn-bg: #3d2f12; --ok: #4ec5b9; --ok-bg: #153a39; --bad: #ff8a80; --bad-bg: #4a2227;
+  --sea: #131c33; color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.6 var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(32px, env(safe-area-inset-bottom, 0px));
+}
+.wrap { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3, p, ul, ol, dl, dd { margin: 0; padding: 0; }
+h1, h2 { font-family: var(--serif); text-wrap: balance; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--f2); outline-offset: 2px; }
+
+/* 页头 */
+.hero { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; user-select: none; -webkit-user-select: none; }
+.eyebrow { font: 12px/1.4 var(--mono); letter-spacing: .12em; color: var(--mut); }
+h1 { font-size: 42px; line-height: 1.12; font-weight: 900; letter-spacing: .04em; }
+h1 b { color: var(--t2); font-weight: 900; }
+.sub { color: var(--mut); font-size: 14px; }
+
+/* 现在 */
+.now { background: var(--ink); color: var(--bg); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.now .k { font-size: 12px; letter-spacing: .08em; opacity: .7; }
+.now .where { font-family: var(--serif); font-size: 22px; font-weight: 700; line-height: 1.3; text-wrap: balance; }
+.now .detail { font-size: 14px; opacity: .85; }
+.clocks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.clock { background: rgba(255,255,255,.08); border-radius: 12px; padding: 8px 6px; text-align: center; min-width: 0; }
+.clock .c { font: 500 17px/1.3 var(--mono); }
+.clock .l { font-size: 11px; opacity: .75; }
+.clock.here { background: rgba(255,255,255,.2); }
+.cd { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; border-top: 1px solid rgba(255,255,255,.18); padding-top: 12px; }
+.cd .lab { font-size: 13px; opacity: .85; min-width: 0; }
+.cd .lab small { display: block; opacity: .75; font-size: 12px; }
+.cd .num { font: 500 18px/1.2 var(--mono); white-space: nowrap; }
+.bar { position: relative; display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: rgba(255,255,255,.12); gap: 1px; }
+.bar i { display: block; height: 100%; }
+.bar-wrap { position: relative; }
+.bar-pin { position: absolute; top: -4px; width: 4px; height: 18px; margin-left: -2px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 2px var(--ink); }
+.bar-cap { display: flex; justify-content: space-between; font-size: 11px; opacity: .7; margin-top: 4px; }
+
+/* 卡片通用 */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card h2 { font-size: 19px; }
+.note { font-size: 12.5px; color: var(--mut); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12.5px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 18px; height: 5px; border-radius: 3px; background: var(--c); display: inline-block; }
+
+/* 地图 */
+.map { width: 100%; height: auto; display: block; border-radius: 14px; background: var(--sea); }
+.map text { font-family: var(--sans); fill: var(--ink); }
+.map .grid { stroke: var(--line); stroke-width: 1; opacity: .8; }
+.map .arc { fill: none; stroke-width: 3; stroke-linecap: round; opacity: .28; }
+.map .arc-on { fill: none; stroke-width: 3; stroke-linecap: round; }
+.map .stop { fill: var(--card); stroke: var(--ink); stroke-width: 2.5; }
+.map a { cursor: pointer; }
+.map .lab { font-size: 14px; font-weight: 700; }
+.map .lab2 { font-size: 11px; fill: var(--mut); }
+.me circle.core { fill: var(--t2); stroke: #fff; stroke-width: 2.5; }
+.me circle.ring { fill: none; stroke: var(--t2); stroke-width: 2; opacity: .6; transform-box: fill-box; transform-origin: center; animation: pulse 1.8s ease-out infinite; }
+@keyframes pulse { from { transform: scale(.6); opacity: .8; } to { transform: scale(2.2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .me circle.ring { animation: none; } }
+
+/* 每日 */
+.day { background: var(--card); border: 1px solid var(--line); border-radius: 20px; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.day-h { padding: 16px 16px 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.day-h .dd { font: 12px/1.4 var(--mono); letter-spacing: .06em; color: var(--mut); }
+.day-h h2 { font-size: 21px; line-height: 1.3; }
+.tzchip { font: 500 12px/1 var(--mono); padding: 6px 9px; border-radius: 999px; background: var(--soft); white-space: nowrap; }
+.day.today { border-color: var(--t2); box-shadow: 0 0 0 1px var(--t2); }
+.day-b { padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+details.route { border: 1px solid var(--line); border-radius: 14px; background: var(--bg); }
+details.route > summary { list-style: none; cursor: pointer; padding: 11px 14px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+details.route > summary::-webkit-details-marker { display: none; }
+details.route > summary::after { content: "展开 ▾"; font-weight: 400; color: var(--mut); font-size: 13px; }
+details.route[open] > summary::after { content: "收起 ▴"; }
+.line { list-style: none; padding: 4px 14px 14px; display: flex; flex-direction: column; }
+.n { display: grid; grid-template-columns: 62px 22px 1fr; gap: 0 8px; min-width: 0; position: relative; }
+.n .time { font: 500 15px/1.3 var(--mono); text-align: right; padding-top: 2px; }
+.n .time small { display: block; font-size: 10.5px; color: var(--mut); font-weight: 400; }
+.n .rail { position: relative; display: flex; justify-content: center; }
+.n .rail::before { content: ""; position: absolute; top: 12px; bottom: -4px; width: 5px; border-radius: 3px; background: var(--c, var(--xfer)); opacity: .35; }
+.n:last-child .rail::before { display: none; }
+.n .dot { position: relative; margin-top: 5px; width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--c, var(--xfer)); background: var(--card); z-index: 1; }
+.n .body { padding-bottom: 14px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.n .body b { font-size: 15px; line-height: 1.4; }
+.n .desc { font-size: 13px; color: var(--mut); }
+.n .addr { font-size: 12.5px; color: var(--mut); overflow-wrap: anywhere; }
+.n .bjt { font: 11.5px/1.4 var(--mono); color: var(--mut); }
+.n.is-done .dot { background: var(--c, var(--xfer)); }
+.n.is-done .body b { color: var(--mut); }
+.n .here { display: none; align-self: flex-start; font-size: 12px; font-weight: 700; color: #fff; background: var(--t2); border-radius: 999px; padding: 1px 10px; margin-top: 4px; }
+.n.is-now .here { display: inline-block; }
+.n.is-now .dot { background: var(--t2); border-color: var(--t2); box-shadow: 0 0 0 4px color-mix(in srgb, var(--t2) 25%, transparent); }
+.acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.btn { display: inline-flex; align-items: center; min-height: 34px; padding: 5px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-size: 13px; text-decoration: none; cursor: pointer; }
+.btn.go { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* 机票 */
+.tkt { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.tkt-h { background: var(--c); color: #fff; padding: 9px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+.tkt-h b { font: 700 16px/1.2 var(--mono); }
+.tkt-h span { text-align: right; min-width: 0; }
+.tkt-r { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; padding: 14px 14px 6px; align-items: start; }
+.end { display: flex; flex-direction: column; min-width: 0; }
+.end.r { text-align: right; }
+.end .t { font: 500 26px/1.15 var(--mono); }
+.end .dt { font-size: 12px; color: var(--mut); }
+.end .ap { font: 700 18px/1.3 var(--mono); margin-top: 4px; }
+.end .an { font-size: 12.5px; color: var(--mut); }
+.mid { text-align: center; font-size: 12px; color: var(--mut); padding-top: 8px; }
+.mid b { display: block; color: var(--ink); font: 500 13px/1.4 var(--mono); }
+.tkt dl { padding: 4px 14px 14px; display: grid; grid-template-columns: 80px 1fr; gap: 6px 10px; font-size: 13px; }
+.tkt dt { color: var(--mut); }
+.tkt dd { min-width: 0; overflow-wrap: anywhere; }
+.pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 9px; border-radius: 999px; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.wait { background: var(--warn-bg); color: var(--warn); }
+.slack { border-radius: 12px; padding: 10px 12px; font-size: 13.5px; background: var(--ok-bg); }
+.slack.tight { background: var(--warn-bg); }
+.slack b { font-weight: 700; }
+.slack ul { padding-left: 18px; margin-top: 4px; }
+
+/* 天气和提醒 */
+.wx { display: flex; flex-direction: column; gap: 8px; }
+.wx-r { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; background: var(--bg); border-radius: 14px; padding: 12px; }
+.wx-r .deg { font: 500 22px/1.2 var(--mono); }
+.wx-r .deg small { display: block; font: 11.5px/1.4 var(--sans); color: var(--mut); }
+.wx-r .wear { font-size: 14px; }
+.wx-r .wear small { display: block; font-size: 12.5px; color: var(--mut); }
+.tips h3 { font-size: 14px; margin-bottom: 4px; }
+.tips ul { padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+.warn { background: var(--warn-bg); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; }
+.warn ul { padding-left: 18px; display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
+.warn h3 { font-size: 14px; }
+
+/* 待办 */
+.todo { list-style: none; display: flex; flex-direction: column; }
+.todo li { display: flex; gap: 12px; align-items: flex-start; padding: 11px 0; border-top: 1px solid var(--line); }
+.todo li:first-child { border-top: 0; }
+.todo input { appearance: none; -webkit-appearance: none; flex: none; width: 24px; height: 24px; margin: 1px 0 0; border: 2px solid var(--mut); border-radius: 7px; background: var(--bg); display: grid; place-items: center; }
+.todo input:checked { background: var(--t2); border-color: var(--t2); }
+.todo input:checked::after { content: ""; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) translate(-1px, -1px); }
+.todo input:disabled { opacity: 1; }
+.todo label { min-width: 0; font-size: 14.5px; }
+.todo small { display: block; color: var(--mut); font-size: 12.5px; line-height: 1.5; }
+.todo li.done label > span { color: var(--mut); text-decoration: line-through; text-decoration-color: var(--line); }
+.prog { height: 6px; background: var(--soft); border-radius: 3px; overflow: hidden; }
+.prog i { display: block; height: 100%; width: 0; background: var(--t2); transition: width .25s; }
+.owner { font-size: 12px; color: var(--ok); }
+.foot { text-align: center; font-size: 12px; color: var(--mut); padding: 4px 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero" id="title">
+    <p class="eyebrow">YUL → CMN → PKX → 鹤壁东</p>
+    <h1>回<b>家</b>之旅</h1>
+    <p class="sub">2026 年 11 月 17 日 至 19 日 · 蒙特利尔 → 鹤壁</p>
+  </header>
+
+  <section class="now" aria-live="polite">
+    <span class="k">此刻</span>
+    <div class="where" id="nowWhere">—</div>
+    <div class="detail" id="nowDetail"></div>
+    <div class="clocks" id="clocks"></div>
+    <div class="cd"><div class="lab" id="cdLab"></div><div class="num" id="cdNum"></div></div>
+    <div class="cd"><div class="lab" id="homeLab"></div><div class="num" id="homeNum"></div></div>
+    <div>
+      <div class="bar-wrap"><div class="bar" id="bar"></div><div class="bar-pin" id="pin"></div></div>
+      <div class="bar-cap"><span>11/17 蒙特利尔出发</span><span>11/19 鹤壁东</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>行程总览</h2>
+    <div class="legend" id="legend"></div>
+    <svg class="map" id="mapWorld" viewBox="0 0 400 230" role="img" aria-label="蒙特利尔到卡萨布兰卡到北京的航线示意图"></svg>
+    <svg class="map" id="mapBJ" viewBox="0 0 400 330" role="img" aria-label="北京大兴机场到北京西站到鹤壁东站的高铁示意图"></svg>
+    <p class="note">示意图，不按比例。点击任何地点，会在手机上的探途离线地图里打开。红点是按时刻表推算出的当前位置。</p>
+  </section>
+
+  <div id="days" style="display:contents"></div>
+
+  <section class="card" id="todoCard">
+    <h2>待办清单</h2>
+    <div class="prog"><i id="todoBar"></i></div>
+    <div class="note" id="todoNote"></div>
+    <ul class="todo" id="todo"></ul>
+  </section>
+
+  <p class="foot">所有时间均为当地时间，并标注时区。页面不含订单号、护照信息和二维码。</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var MIN = 60000;
+
+  /* ---------- 时区：固定偏移，不依赖手机的时区数据库 ---------- */
+  var Z = {
+    mtl: { off: -300, city: "蒙特利尔", utc: "UTC−5" },
+    cmn: { off: 0, city: "卡萨布兰卡", utc: "UTC+0" },
+    bj: { off: 480, city: "北京", utc: "UTC+8" }
+  };
+  var WD = ["日", "一", "二", "三", "四", "五", "六"];
+  function T(s) { return Date.parse(s); }
+  function p2(n) { return (n < 10 ? "0" : "") + n; }
+  function parts(ms, z) { var d = new Date(ms + Z[z].off * MIN); return { mo: d.getUTCMonth() + 1, d: d.getUTCDate(), h: d.getUTCHours(), mi: d.getUTCMinutes(), wd: d.getUTCDay() }; }
+  function hm(ms, z) { var p = parts(ms, z); return p2(p.h) + ":" + p2(p.mi); }
+  function md(ms, z) { var p = parts(ms, z); return p.mo + "月" + p.d + "日"; }
+  function mdw(ms, z) { return md(ms, z) + " 周" + WD[parts(ms, z).wd]; }
+  function dayShift(ms, fromZ, toZ) { return parts(ms, toZ).d - parts(ms, fromZ).d; }
+  function dur(ms) { var m = Math.round(ms / MIN), h = Math.floor(m / 60); return h + " 小时 " + p2(m % 60) + " 分"; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  /* ---------- 时刻表（全部用带偏移的绝对时间） ---------- */
+  var E = {
+    leave: T("2026-11-17T16:45:00-05:00"),
+    yul: T("2026-11-17T17:40:00-05:00"),
+    dep1: T("2026-11-17T20:40:00-05:00"),
+    arr1: T("2026-11-18T08:15:00+00:00"),
+    t1: T("2026-11-18T12:20:00+00:00"),
+    dep2: T("2026-11-18T15:20:00+00:00"),
+    arr2: T("2026-11-19T11:55:00+08:00"),
+    jd: T("2026-11-19T14:35:00+08:00"),
+    gate: T("2026-11-19T16:34:00+08:00"),
+    g3942: T("2026-11-19T16:54:00+08:00"),
+    bjw: T("2026-11-19T17:28:00+08:00"),
+    g555: T("2026-11-19T19:14:00+08:00"),
+    home: T("2026-11-19T22:01:00+08:00")
+  };
+
+  /* ---------- 地点 ---------- */
+  var P = {
+    home: { n: "900 rue Saint-Jacques", a: "900 rue Saint-Jacques, Montréal, QC, Canada", q: "900 rue Saint-Jacques, Montréal", ll: "45.5017,-73.5673" },
+    yul: { n: "蒙特利尔-特鲁多国际机场 YUL", a: "975 Boulevard Roméo-Vachon Nord, Dorval, QC H4Y 1H1, Canada", q: "Montréal-Pierre Elliott Trudeau International Airport", ll: "45.4706,-73.7408" },
+    cmn2: { n: "卡萨布兰卡穆罕默德五世国际机场 T2", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 2）", q: "Aéroport Mohammed V Casablanca Terminal 2", ll: "33.3675,-7.5898" },
+    cmn1: { n: "卡萨布兰卡穆罕默德五世国际机场 T1", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 1）", q: "Aéroport Mohammed V Casablanca Terminal 1", ll: "33.3675,-7.5898" },
+    pkx: { n: "北京大兴国际机场 PKX", a: "北京市大兴区，北京大兴国际机场", q: "北京大兴国际机场", ll: "39.5098,116.4105" },
+    pkxs: { n: "大兴机场站（京雄城际）", a: "北京大兴国际机场旁，离航站楼步行约 150 米", q: "大兴机场站", ll: "39.5098,116.4105" },
+    bjw: { n: "北京西站", a: "北京市丰台区莲花池东路 118 号", q: "北京西站", ll: "39.8946,116.3220" },
+    hebi: { n: "鹤壁东站", a: "河南省鹤壁市淇滨区朝歌路", q: "鹤壁东站", ll: "35.7478,114.2974" }
+  };
+  function guru(p) { return "guru://search?q=" + encodeURIComponent(p.q) + "&coord=" + p.ll; }
+
+  /* ---------- 路段颜色 ---------- */
+  var LEGS = [
+    { k: "ground", c: "var(--ground)", t: "去机场（司机）" },
+    { k: "f1", c: "var(--f1)", t: "AT209 蒙特利尔 → 卡萨布兰卡" },
+    { k: "f2", c: "var(--f2)", t: "AT230 卡萨布兰卡 → 北京大兴" },
+    { k: "t1", c: "var(--t1)", t: "G3942 大兴机场 → 北京西" },
+    { k: "t2", c: "var(--t2)", t: "G555 北京西 → 鹤壁东" }
+  ];
+
+  /* ---------- 进度条分段 ---------- */
+  var SEG = [
+    [E.leave, E.dep1, "var(--ground)"], [E.dep1, E.arr1, "var(--f1)"], [E.arr1, E.dep2, "var(--xfer)"],
+    [E.dep2, E.arr2, "var(--f2)"], [E.arr2, E.g3942, "var(--xfer)"], [E.g3942, E.bjw, "var(--t1)"],
+    [E.bjw, E.g555, "var(--xfer)"], [E.g555, E.home, "var(--t2)"]
+  ];
+
+  /* ---------- 地图几何 ---------- */
+  var W = { home: [40, 128], yul: [66, 106], cmn: [190, 170], bj: [346, 96] };
+  var A1 = { p0: W.yul, c: [120, 18], p1: W.cmn };
+  var A2 = { p0: W.cmn, c: [280, 6], p1: W.bj };
+  function bez(a, t) { var u = 1 - t; return [u * u * a.p0[0] + 2 * u * t * a.c[0] + t * t * a.p1[0], u * u * a.p0[1] + 2 * u * t * a.c[1] + t * t * a.p1[1]]; }
+  function lerp(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; }
+  function clamp(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+  var I = { pkx: [300, 120], bjw: [250, 50], hebi: [120, 262] };
+
+  function stopNode(p, xy, label, sub, anchor, dx, dy) {
+    return '<a href="' + esc(guru(p)) + '" aria-label="' + esc(label) + '"><circle class="stop" cx="' + xy[0] + '" cy="' + xy[1] + '" r="6"/><circle cx="' + xy[0] + '" cy="' + xy[1] + '" r="20" fill="transparent"/>' +
+      '<text class="lab" x="' + (xy[0] + dx) + '" y="' + (xy[1] + dy) + '" text-anchor="' + anchor + '">' + esc(label) + '</text>' +
+      '<text class="lab2" x="' + (xy[0] + dx) + '" y="' + (xy[1] + dy + 17) + '" text-anchor="' + anchor + '">' + esc(sub) + '</text></a>';
+  }
+  function grid(w, h, nx, ny) {
+    var s = ""; for (var i = 1; i < nx; i++) s += '<line class="grid" x1="' + (w * i / nx) + '" y1="0" x2="' + (w * i / nx) + '" y2="' + h + '"/>';
+    for (var j = 1; j < ny; j++) s += '<line class="grid" x1="0" y1="' + (h * j / ny) + '" x2="' + w + '" y2="' + (h * j / ny) + '"/>'; return s;
+  }
+  function buildWorld() {
+    var q = function (a) { return "M" + a.p0[0] + " " + a.p0[1] + " Q" + a.c[0] + " " + a.c[1] + " " + a.p1[0] + " " + a.p1[1]; };
+    var s = grid(400, 230, 4, 3);
+    s += '<path d="M' + W.home[0] + ' ' + W.home[1] + ' L' + W.yul[0] + ' ' + W.yul[1] + '" class="arc-on" style="stroke:var(--ground)"/>';
+    s += '<path class="arc" d="' + q(A1) + '" style="stroke:var(--f1)"/><path id="a1on" class="arc-on" pathLength="100" d="' + q(A1) + '" style="stroke:var(--f1)" stroke-dasharray="0 100"/>';
+    s += '<path class="arc" d="' + q(A2) + '" style="stroke:var(--f2)"/><path id="a2on" class="arc-on" pathLength="100" d="' + q(A2) + '" style="stroke:var(--f2)" stroke-dasharray="0 100"/>';
+    s += stopNode(P.home, W.home, "蒙特利尔市区", "900 rue Saint-Jacques", "start", -22, 30);
+    s += stopNode(P.yul, W.yul, "YUL", "蒙特利尔机场", "start", 14, -8);
+    s += stopNode(P.cmn2, W.cmn, "CMN", "卡萨布兰卡", "middle", 0, 28);
+    s += stopNode(P.pkx, W.bj, "PKX", "北京大兴机场", "end", 12, 28);
+    s += '<g id="meW" class="me" style="display:none"><circle class="ring" r="9"/><circle class="core" r="6"/></g>';
+    s += '<text class="lab2" x="112" y="150" text-anchor="middle">AT209 · 6 小时 35 分</text>';
+    s += '<text class="lab2" x="272" y="150" text-anchor="middle">AT230 · 12 小时 35 分</text>';
+    document.getElementById("mapWorld").innerHTML = s;
+  }
+  function buildBJ() {
+    var s = grid(400, 330, 4, 3);
+    s += '<path class="arc" d="M' + I.pkx + ' L' + I.bjw + '" style="stroke:var(--t1);opacity:.28"/><path id="b1on" class="arc-on" pathLength="100" d="M' + I.pkx + ' L' + I.bjw + '" style="stroke:var(--t1)" stroke-dasharray="0 100"/>';
+    s += '<path class="arc" d="M' + I.bjw + ' L' + I.hebi + '" style="stroke:var(--t2);opacity:.28"/><path id="b2on" class="arc-on" pathLength="100" d="M' + I.bjw + ' L' + I.hebi + '" style="stroke:var(--t2)" stroke-dasharray="0 100"/>';
+    s += stopNode(P.bjw, I.bjw, "北京西站", "17:28 到 · 19:14 发", "end", -16, 6);
+    s += stopNode(P.pkxs, I.pkx, "大兴机场站", "16:54 发车 G3942", "end", -16, 6);
+    s += stopNode(P.hebi, I.hebi, "鹤壁东站", "22:01 到 G555", "start", 16, 6);
+    s += '<text class="lab2" x="388" y="316" text-anchor="end">北京时间 UTC+8</text>';
+    s += '<g id="meB" class="me" style="display:none"><circle class="ring" r="12"/><circle class="core" r="9"/></g>';
+    document.getElementById("mapBJ").innerHTML = s;
+  }
+
+  /* ---------- 当前阶段 ---------- */
+  function phase(now) {
+    var S = [
+      [E.leave, "在蒙特利尔，准备出发", "mtl", "出发去机场", E.leave, "mtl", "司机 16:45 到 900 rue Saint-Jacques 接我"],
+      [E.yul, "在去蒙特利尔机场的路上", "mtl", "目标到达机场", E.yul, "mtl", "市区到 YUL 约 20 到 35 分钟"],
+      [E.dep1, "在蒙特利尔机场", "mtl", "AT209 起飞", E.dep1, "mtl", "值机、托运、安检、候机"],
+      [E.arr1, "在 AT209 航班上", "fly", "AT209 落地卡萨布兰卡", E.arr1, "cmn", "蒙特利尔 → 卡萨布兰卡"],
+      [E.dep2, "在卡萨布兰卡机场转机", "cmn", "AT230 起飞", E.dep2, "cmn", "T2 落地，转到 T1，行李直挂"],
+      [E.arr2, "在 AT230 航班上", "fly", "AT230 落地北京大兴", E.arr2, "bj", "卡萨布兰卡 → 北京大兴"],
+      [E.g3942, "在北京大兴机场", "bj", "G3942 发车", E.g3942, "bj", "入境、取行李、京东邮寄行李、去大兴机场站"],
+      [E.bjw, "在 G3942 高铁上", "fly", "到达北京西站", E.bjw, "bj", "大兴机场 → 北京西"],
+      [E.g555, "在北京西站换乘", "bj", "G555 发车", E.g555, "bj", "出站、安检、检票上车"],
+      [E.home, "在 G555 高铁上", "fly", "到达鹤壁东站", E.home, "bj", "北京西 → 鹤壁东"],
+      [Infinity, "已到达鹤壁东站", "bj", "", 0, "bj", "回家了"]
+    ];
+    for (var i = 0; i < S.length; i++) if (now < S[i][0]) return { i: i, title: S[i][1], z: S[i][2], next: S[i][3], nextT: S[i][4], nextZ: S[i][5], detail: S[i][6], start: i ? S[i - 1][0] : -Infinity, end: S[i][0] };
+    return null;
+  }
+
+  /* ---------- 页面构建：每日 ---------- */
+  function node(o) {
+    var z = o.z, h = '<li class="n" data-t="' + o.t + '" style="--c:' + o.c + '">';
+    h += '<span class="time">' + hm(o.t, z) + '<small>' + Z[z].utc + '</small></span><span class="rail"><i class="dot"></i></span><div class="body">';
+    h += '<b>' + esc(o.title) + '</b>';
+    if (o.desc) h += '<span class="desc">' + esc(o.desc) + '</span>';
+    if (o.p) h += '<span class="addr">' + esc(o.p.a) + '</span>';
+    if (z !== "bj") { var sh = dayShift(o.t, z, "bj"); h += '<span class="bjt">北京时间 ' + md(o.t, "bj") + ' ' + hm(o.t, "bj") + '</span>'; }
+    h += '<span class="here">现在在这里</span>';
+    if (o.p) h += '<div class="acts"><a class="btn go" href="' + esc(guru(o.p)) + '">在探途中打开</a><button class="btn" type="button" data-copy="' + esc(o.p.a) + '">复制地址</button></div>';
+    return h + '</div></li>';
+  }
+  function tkt(o) {
+    var h = '<article class="tkt" style="--c:' + o.c + '"><div class="tkt-h"><b>' + esc(o.no) + '</b><span>' + esc(o.line) + '</span></div>';
+    h += '<div class="tkt-r"><div class="end"><span class="t">' + hm(o.t0, o.z0) + '</span><span class="dt">' + mdw(o.t0, o.z0) + ' · ' + Z[o.z0].utc + '</span><span class="ap">' + esc(o.c0) + '</span><span class="an">' + esc(o.n0) + '</span></div>';
+    h += '<div class="mid"><b>' + dur(o.t1 - o.t0) + '</b>→</div>';
+    var sh = dayShift(o.t1, o.z1, o.z0);
+    h += '<div class="end r"><span class="t">' + hm(o.t1, o.z1) + '</span><span class="dt">' + mdw(o.t1, o.z1) + ' · ' + Z[o.z1].utc + '</span><span class="ap">' + esc(o.c1) + '</span><span class="an">' + esc(o.n1) + '</span></div></div>';
+    h += '<dl>' + o.rows.map(function (r) { return '<dt>' + esc(r[0]) + '</dt><dd>' + r[1] + '</dd>'; }).join("") + '</dl>';
+    return h + '</article>';
+  }
+  function wxBlock(id, title) { return '<div class="wx"><h3 style="font-size:14px">' + esc(title) + '</h3><div data-wx="' + id + '"></div></div>'; }
+  function ul(a) { return '<ul>' + a.map(function (x) { return '<li>' + x + '</li>'; }).join("") + '</ul>'; }
+
+  var DAYS = [
+    {
+      id: "d1", t: E.leave, z: "mtl", title: "蒙特利尔 → 起飞",
+      nodes: [
+        { t: E.leave, z: "mtl", c: "var(--ground)", title: "出发去机场", desc: "司机已约好", p: P.home },
+        { t: E.yul, z: "mtl", c: "var(--ground)", title: "到达蒙特利尔机场", desc: "起飞前 3 小时。按路况预计 17:10 到 17:25 到，高峰堵车可能更晚", p: P.yul },
+        { t: E.dep1, z: "mtl", c: "var(--f1)", title: "AT209 起飞", desc: "飞往卡萨布兰卡，6 小时 35 分" }
+      ],
+      tickets: [{
+        no: "AT209", line: "Royal Air Maroc · 经济舱 · 波音 787-8 · 含餐", c: "var(--f1)",
+        t0: E.dep1, z0: "mtl", c0: "YUL", n0: "蒙特利尔", t1: E.arr1, z1: "cmn", c1: "CMN T2", n1: "卡萨布兰卡",
+        rows: [
+          ["起飞机场", "蒙特利尔-特鲁多国际机场，975 Boulevard Roméo-Vachon Nord, Dorval, QC H4Y 1H1"],
+          ["航站楼", "YUL 只有一栋航站楼，国际出发。值机柜台看现场屏幕上 Royal Air Maroc 的编号"],
+          ["到机场时间", "<b>11 月 17 日 17:40 前</b>（蒙特利尔时间，起飞前 3 小时）"],
+          ["落地", "11 月 18 日 08:15（卡萨布兰卡 UTC+0），T2 航站楼"],
+          ["行李", "转机无需提取和重新托运"]
+        ]
+      }],
+      wx: [["d1", "蒙特利尔当天天气"]],
+      tips: ["护照、登机牌电子版、充电宝（只能随身，不能托运）、药品放在随身包", "保暖衣物穿在身上，到卡萨布兰卡会热，厚外套要能塞进随身包", "机舱偏冷，带一件薄外套或围巾", "手机和探途离线地图提前下载，出发前把行程页打开一次"],
+      warns: ["值机时当面确认：两段航班的登机牌都已打印，行李牌终点是北京 PKX。截图显示转机行李直挂，仍请现场核实", "蒙特利尔现在是冬令时，UTC−5"]
+    },
+    {
+      id: "d2", t: E.arr1, z: "cmn", title: "卡萨布兰卡转机",
+      nodes: [
+        { t: E.arr1, z: "cmn", c: "var(--f1)", title: "AT209 落地 CMN T2", desc: "按“转机 / Correspondance”指示走，行李直挂", p: P.cmn2 },
+        { t: E.t1, z: "cmn", c: "var(--xfer)", title: "建议此时前转到 T1", desc: "留足时间找 T1，再安检，登机口开前不用急", p: P.cmn1 },
+        { t: E.dep2, z: "cmn", c: "var(--f2)", title: "AT230 起飞", desc: "飞往北京大兴，12 小时 35 分" }
+      ],
+      tickets: [{
+        no: "AT230", line: "Royal Air Maroc · 经济舱 · 波音 787-9 · 含餐", c: "var(--f2)",
+        t0: E.dep2, z0: "cmn", c0: "CMN T1", n0: "卡萨布兰卡", t1: E.arr2, z1: "bj", c1: "PKX", n1: "北京大兴",
+        rows: [
+          ["起飞机场", "穆罕默德五世国际机场，Nouaceur, Casablanca, Maroc"],
+          ["航站楼", "<b>T1</b>。落地在 T2，起飞在 T1，两个航站楼不同"],
+          ["到 T1 时间", "<b>11 月 18 日 12:20 前</b>（UTC+0，起飞前约 3 小时）"],
+          ["转机", "7 小时 05 分。截图写明无需提取和重新托运行李"],
+          ["落地", "11 月 19 日 11:55（北京 UTC+8），北京大兴国际机场"]
+        ]
+      }],
+      wx: [["d2", "卡萨布兰卡当天天气"]],
+      tips: ["换一身轻便衣服：T 恤加薄外套，把冬装收进随身包", "机上 12 小时多：袜子、颈枕、眼罩、保湿，水杯过安检后接水", "转机 7 小时，充电宝充好，下载好离线内容", "过北京入境前，把入境所需资料先准备好，放在随身包"],
+      warns: ["卡萨布兰卡当地时间是 UTC+0，所有航班时间都是当地时间", "T2 到 T1 的走法没有官方资料：落地后看指示牌或问地勤，预留至少 1 小时", "是否要办摩洛哥入境，取决于护照和航司安排：不确定就在 T2 向地勤确认，不要自己出关"]
+    },
+    {
+      id: "d3", t: E.arr2, z: "bj", title: "北京 → 鹤壁",
+      nodes: [
+        { t: E.arr2, z: "bj", c: "var(--f2)", title: "AT230 落地大兴机场", desc: "入境、海关、取行李，预计 12:15 到 14:35 办完", p: P.pkx },
+        { t: E.jd, z: "bj", c: "var(--xfer)", title: "最晚此时开始京东邮寄", desc: "在机场内办理，约 70 到 90 分钟", p: P.pkx },
+        { t: E.gate, z: "bj", c: "var(--t1)", title: "最晚到大兴机场站检票口", desc: "发车前 20 分钟，要先过车站安检", p: P.pkxs },
+        { t: E.g3942, z: "bj", c: "var(--t1)", title: "G3942 发车", desc: "34 分钟到北京西", p: P.pkxs },
+        { t: E.bjw, z: "bj", c: "var(--xfer)", title: "到达北京西站", desc: "出站、安检、检票。距 G555 还有 1 小时 46 分", p: P.bjw },
+        { t: E.g555, z: "bj", c: "var(--t2)", title: "G555 发车", desc: "2 小时 47 分到鹤壁东", p: P.bjw },
+        { t: E.home, z: "bj", c: "var(--t2)", title: "到达鹤壁东站", desc: "回家", p: P.hebi }
+      ],
+      tickets: [
+        {
+          no: "G3942", line: "复兴号 · 大兴机场 → 北京西", c: "var(--t1)",
+          t0: E.g3942, z0: "bj", c0: "大兴机场", n0: "大兴机场站", t1: E.bjw, z1: "bj", c1: "北京西", n1: "北京西站",
+          rows: [["状态", '<span class="pill wait">待购票</span> 12306 显示 16:00 起售（北京时间）'], ["站点", "大兴机场站，北京大兴国际机场旁，步行约 150 米"], ["到站台", "<b>16:34 前</b>到检票口（发车前 20 分钟）"], ["票价", "二等座约 24 元起"]]
+        },
+        {
+          no: "G555", line: "北京西 → 鹤壁东 · 二等座约 244 元起", c: "var(--t2)",
+          t0: E.g555, z0: "bj", c0: "北京西", n0: "北京西站", t1: E.home, z1: "bj", c1: "鹤壁东", n1: "鹤壁东站",
+          rows: [["状态", '<span class="pill wait">待购票</span> 12306 显示 8:00 起售（北京时间）'], ["站点", "北京西站，丰台区莲花池东路 118 号；终点鹤壁东站，淇滨区朝歌路"], ["到站台", "<b>18:54 前</b>到检票口（发车前 20 分钟）"]]
+        }
+      ],
+      wx: [["d3a", "北京当天天气"], ["d3b", "鹤壁当天天气（晚上到站）"]],
+      tips: ["北京比蒙特利尔快 13 小时，比卡萨布兰卡快 8 小时，落地后把手机作息调到北京时间", "身份证件、12306 账号、取票码放在手机里，离线截图一份", "京东邮寄的单号拍照或截图保存", "到站前告诉家人 22:01 鹤壁东站接站"],
+      warns: ["京东在大兴机场的邮寄点位置没有公开资料：落地后问机场服务台，或出发前问京东客服", "大兴机场站和北京西站都要过安检，各留 15 到 20 分钟"],
+      slack: true
+    }
+  ];
+
+  function buildDays() {
+    var html = DAYS.map(function (d) {
+      var h = '<section class="day" id="' + d.id + '" data-start="' + d.t + '"><header class="day-h"><div><span class="dd">' + mdw(d.t, d.z) + '</span><h2>' + esc(d.title) + '</h2></div><span class="tzchip">' + Z[d.z].utc + '</span></header><div class="day-b">';
+      h += '<details class="route"><summary>展开今天的路线图</summary><ol class="line">' + d.nodes.map(node).join("") + '</ol></details>';
+      h += d.tickets.map(tkt).join("");
+      if (d.slack) {
+        h += '<div class="slack tight"><b>办京东邮寄的时间够不够</b><ul>' +
+          '<li>最顺：约 13:00 办完入境和取行李，邮寄完约 14:15，离发车还有 2 小时 40 分</li>' +
+          '<li>最慢：约 14:35 办完入境和取行李，邮寄 90 分钟到 16:05，再走到检票口，只剩约 15 分钟余量</li>' +
+          '<li>16:05 还没办完，改乘 17:19 的 C2726（北京西 17:47 到），仍能赶上 G555（中间 87 分钟）</li>' +
+          '<li>车票改签以 12306 规则为准，改签前先确认能不能改</li></ul></div>';
+      }
+      h += d.wx.map(function (w) { return wxBlock(w[0], w[1]); }).join("");
+      h += '<div class="tips"><h3>要准备的东西</h3>' + ul(d.tips) + '</div>';
+      h += '<div class="warn"><h3>注意</h3>' + ul(d.warns) + '</div>';
+      return h + '</div></section>';
+    }).join("");
+    document.getElementById("days").innerHTML = html;
+  }
+
+  /* ---------- 天气与穿衣 ---------- */
+  var WX = {
+    d1: { lat: 45.5, lon: -73.57, tz: "America/Toronto", date: "2026-11-17", lo: -1, hi: 5, name: "蒙特利尔" },
+    d2: { lat: 33.37, lon: -7.59, tz: "Africa/Casablanca", date: "2026-11-18", lo: 13, hi: 21, name: "卡萨布兰卡" },
+    d3a: { lat: 39.51, lon: 116.41, tz: "Asia/Shanghai", date: "2026-11-19", lo: -1, hi: 9, name: "北京" },
+    d3b: { lat: 35.75, lon: 114.3, tz: "Asia/Shanghai", date: "2026-11-19", lo: 3, hi: 12, name: "鹤壁" }
+  };
+  function wear(lo, hi) {
+    var a, b;
+    if (hi <= 0) { a = "厚羽绒服、帽子、手套、围巾"; b = "最低气温很低，里面穿保暖内衣"; }
+    else if (hi <= 8) { a = "羽绒服或厚大衣，毛衣，帽子手套"; b = lo < 0 ? "早晚低于零度，手套围巾别忘" : "室内外温差大，里面穿薄一点方便脱"; }
+    else if (hi <= 14) { a = "风衣或夹克，长袖打底"; b = lo < 4 ? "早晚偏冷，加一件薄毛衣" : "白天舒适，早晚加一件"; }
+    else if (hi <= 21) { a = "长袖加薄外套"; b = "白天稍热，外套随手拿着"; }
+    else { a = "短袖或薄长袖，带一件薄外套"; b = "室内空调偏冷"; }
+    return { a: a, b: b };
+  }
+  function renderWx(id, lo, hi, tag) {
+    var el = document.querySelector('[data-wx="' + id + '"]'); if (!el) return;
+    var w = wear(lo, hi);
+    el.innerHTML = '<div class="wx-r"><div class="deg">' + Math.round(lo) + '° 到 ' + Math.round(hi) + '°<small>' + esc(tag) + '</small></div><div class="wear">' + esc(w.a) + '<small>' + esc(w.b) + '</small></div></div>';
+  }
+  function loadWx() {
+    var cache = {}; try { cache = JSON.parse(localStorage.getItem("hb-wx") || "{}"); } catch (e) {}
+    Object.keys(WX).forEach(function (id) {
+      var w = WX[id], c = cache[id];
+      if (c) renderWx(id, c.lo, c.hi, "预报，更新于 " + c.at); else renderWx(id, w.lo, w.hi, "常年气温参考，联网后显示预报");
+      if (!window.fetch) return;
+      var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function () { if (ctl) ctl.abort(); }, 7000);
+      var url = "https://api.open-meteo.com/v1/forecast?latitude=" + w.lat + "&longitude=" + w.lon + "&daily=temperature_2m_max,temperature_2m_min&timezone=" + encodeURIComponent(w.tz) + "&start_date=" + w.date + "&end_date=" + w.date;
+      fetch(url, ctl ? { signal: ctl.signal } : {}).then(function (r) { return r.json(); }).then(function (j) {
+        clearTimeout(to);
+        var hi = j && j.daily && j.daily.temperature_2m_max && j.daily.temperature_2m_max[0], lo = j && j.daily && j.daily.temperature_2m_min && j.daily.temperature_2m_min[0];
+        if (typeof hi !== "number" || typeof lo !== "number") return;
+        var n = new Date(); var at = (n.getMonth() + 1) + "月" + n.getDate() + "日 " + p2(n.getHours()) + ":" + p2(n.getMinutes());
+        renderWx(id, lo, hi, "预报，更新于 " + at);
+        cache[id] = { lo: lo, hi: hi, at: at }; try { localStorage.setItem("hb-wx", JSON.stringify(cache)); } catch (e) {}
+      }).catch(function () { clearTimeout(to); });
+    });
+  }
+
+  /* ---------- 待办 ---------- */
+  var TODO = [
+    { id: "driver", done: true, t: "约好去蒙特利尔机场的司机", n: "11 月 17 日 16:45 接" },
+    { id: "g3942", t: "12306 购买 G3942：大兴机场 → 北京西", n: "11 月 19 日 16:54 发车，12306 显示 16:00 起售（北京时间）" },
+    { id: "g555", t: "12306 购买 G555：北京西 → 鹤壁东", n: "11 月 19 日 19:14 发车，12306 显示 8:00 起售（北京时间）" },
+    { id: "jd", t: "向京东确认大兴机场邮寄点位置、营业时间、寄到鹤壁的价格和时效", n: "页面按 70 到 90 分钟估算" },
+    { id: "transit", t: "核对卡萨布兰卡转机要求", n: "在航司官网确认，护照不同要求不同" },
+    { id: "bag", t: "值机时确认两段登机牌和行李牌终点", n: "行李牌终点应是北京 PKX" },
+    { id: "maps", t: "在探途下载离线地图：蒙特利尔、卡萨布兰卡、北京、河南鹤壁", n: "断网前下载完，并打开一次确认可搜到地点" },
+    { id: "save", t: "把行程单、车票截图存到手机相册", n: "离线可看，二维码不要发到公开页" },
+    { id: "pack", t: "按天气准备衣物，充电宝放在随身包", n: "见每日的提醒" },
+    { id: "share", t: "把本页网址发给家人", n: "他们能看到按时刻表推算的位置" }
+  ];
+  var owner = false; try { owner = localStorage.getItem("hb-owner") === "1"; } catch (e) {}
+  var local = {}; try { local = JSON.parse(localStorage.getItem("hb-todo") || "{}"); } catch (e) {}
+  function buildTodo() {
+    var h = TODO.map(function (x) {
+      var on = !!(x.done || local[x.id]);
+      return '<li class="' + (on ? "done" : "") + '"><input type="checkbox" id="td-' + x.id + '" data-id="' + x.id + '"' + (on ? " checked" : "") + (owner ? "" : " disabled") + '><label for="td-' + x.id + '"><span>' + esc(x.t) + '</span><small>' + esc(x.n) + '</small></label></li>';
+    }).join("");
+    document.getElementById("todo").innerHTML = h;
+    var done = TODO.filter(function (x) { return x.done || local[x.id]; }).length;
+    document.getElementById("todoBar").style.width = Math.round(done / TODO.length * 100) + "%";
+    document.getElementById("todoNote").innerHTML = '已完成 <b>' + done + ' / ' + TODO.length + '</b>' + (owner ? ' <span class="owner">· 本机可勾选</span>' : "");
+  }
+  document.getElementById("todo").addEventListener("change", function (e) {
+    var el = e.target; if (!owner || !el.getAttribute("data-id")) return;
+    var id = el.getAttribute("data-id"); if (el.checked) local[id] = 1; else delete local[id];
+    try { localStorage.setItem("hb-todo", JSON.stringify(local)); } catch (x) {}
+    buildTodo();
+  });
+  (function () {
+    var n = 0, t0 = 0, title = document.getElementById("title");
+    title.addEventListener("click", function () {
+      var now = Date.now(); if (now - t0 > 4000) n = 0; t0 = now; n++;
+      if (n >= 7) { n = 0; owner = !owner; try { localStorage.setItem("hb-owner", owner ? "1" : "0"); } catch (e) {} buildTodo(); }
+    });
+  })();
+
+  /* ---------- 复制 ---------- */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-copy]"); if (!b) return;
+    var txt = b.getAttribute("data-copy"), old = b.textContent;
+    function ok() { b.textContent = "已复制"; setTimeout(function () { b.textContent = old; }, 1500); }
+    function fb() {
+      var ta = document.createElement("textarea"); ta.value = txt; ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); ok(); } catch (x) {} document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, fb); else fb();
+  });
+
+  /* ---------- 顶部与图例 ---------- */
+  function buildTop() {
+    document.getElementById("legend").innerHTML = LEGS.map(function (l) { return '<span style="--c:' + l.c + '"><i></i>' + esc(l.t) + '</span>'; }).join("");
+    var tot = E.home - E.leave;
+    document.getElementById("bar").innerHTML = SEG.map(function (s) { return '<i style="width:' + ((s[1] - s[0]) / tot * 100) + '%;background:' + s[2] + '"></i>'; }).join("");
+  }
+  function cdText(ms) {
+    if (ms <= 0) return "0 分";
+    var d = Math.floor(ms / 86400000), h = Math.floor(ms % 86400000 / 3600000), m = Math.floor(ms % 3600000 / MIN), s = Math.floor(ms % MIN / 1000);
+    return (d ? d + " 天 " : "") + (d || h ? p2(h) + " 时 " : "") + p2(m) + " 分" + (d ? "" : " " + p2(s) + " 秒");
+  }
+
+  /* ---------- 每秒更新 ---------- */
+  function set(id, t) { var e = document.getElementById(id); if (e.textContent !== t) e.textContent = t; }
+  function setH(id, h) { var e = document.getElementById(id); if (e.getAttribute("data-h") !== h) { e.innerHTML = h; e.setAttribute("data-h", h); } }
+  function setMe(id, xy) { var g = document.getElementById(id); if (!xy) { g.style.display = "none"; return; } g.style.display = ""; g.setAttribute("transform", "translate(" + xy[0].toFixed(1) + " " + xy[1].toFixed(1) + ")"); }
+  function dash(id, t) { document.getElementById(id).setAttribute("stroke-dasharray", (t * 100).toFixed(2) + " 100"); }
+
+  function update() {
+    var now = Date.now(), ph = phase(now);
+    /* 此刻 */
+    var title = ph.title, detail = ph.detail;
+    if (ph.z === "fly") {
+      var pct = clamp((now - ph.start) / (ph.end - ph.start));
+      detail = detail + " · 已完成 " + Math.round(pct * 100) + "%，还剩 " + dur(ph.end - now);
+    }
+    if (ph.i === 10) detail = "11 月 19 日 22:01 到站，到家了";
+    set("nowWhere", title); set("nowDetail", detail);
+    var cl = ["mtl", "cmn", "bj"].map(function (z) {
+      return '<div class="clock' + (ph.z === z ? " here" : "") + '"><div class="c">' + hm(now, z) + '</div><div class="l">' + Z[z].city + ' ' + Z[z].utc + '</div></div>';
+    }).join("");
+    if (document.getElementById("clocks").getAttribute("data-k") !== cl) { document.getElementById("clocks").innerHTML = cl; document.getElementById("clocks").setAttribute("data-k", cl); }
+    if (ph.next) {
+      setH("cdLab", esc(ph.next) + "<small>" + md(ph.nextT, ph.nextZ) + " " + hm(ph.nextT, ph.nextZ) + " · " + Z[ph.nextZ].city + " " + Z[ph.nextZ].utc + "</small>");
+      set("cdNum", cdText(ph.nextT - now));
+    } else { setH("cdLab", "全程结束"); set("cdNum", "到家"); }
+    setH("homeLab", "到鹤壁东站<small>11月19日 22:01 · 北京 UTC+8</small>");
+    set("homeNum", now >= E.home ? "已到达" : cdText(E.home - now));
+    document.getElementById("pin").style.left = (clamp((now - E.leave) / (E.home - E.leave)) * 100) + "%";
+
+    /* 地图 */
+    var t1 = clamp((now - E.dep1) / (E.arr1 - E.dep1)), t2 = clamp((now - E.dep2) / (E.arr2 - E.dep2));
+    dash("a1on", t1); dash("a2on", t2);
+    var w = null, b = null;
+    if (now < E.leave) w = W.home;
+    else if (now < E.yul) w = lerp(W.home, W.yul, clamp((now - E.leave) / (E.yul - E.leave)));
+    else if (now < E.dep1) w = W.yul;
+    else if (now < E.arr1) w = bez(A1, t1);
+    else if (now < E.dep2) w = W.cmn;
+    else if (now < E.arr2) w = bez(A2, t2);
+    else {
+      w = W.bj;
+      if (now < E.g3942) b = I.pkx;
+      else if (now < E.bjw) b = lerp(I.pkx, I.bjw, clamp((now - E.g3942) / (E.bjw - E.g3942)));
+      else if (now < E.g555) b = I.bjw;
+      else if (now < E.home) b = lerp(I.bjw, I.hebi, clamp((now - E.g555) / (E.home - E.g555)));
+      else b = I.hebi;
+    }
+    setMe("meW", w); setMe("meB", b);
+    dash("b1on", clamp((now - E.g3942) / (E.bjw - E.g3942)));
+    dash("b2on", clamp((now - E.g555) / (E.home - E.g555)));
+
+    /* 每日路线图：已过、当前 */
+    var lis = document.querySelectorAll(".n"), cur = -1, i;
+    for (i = 0; i < lis.length; i++) if (+lis[i].getAttribute("data-t") <= now) cur = i;
+    for (i = 0; i < lis.length; i++) {
+      var done = +lis[i].getAttribute("data-t") <= now;
+      lis[i].classList.toggle("is-done", done && i !== cur);
+      lis[i].classList.toggle("is-now", i === cur && now < E.home + 6 * 3600000);
+    }
+    var days = document.querySelectorAll(".day"), idx = -1;
+    for (i = 0; i < DAYS.length; i++) if (now >= DAYS[i].t && (i === DAYS.length - 1 || now < DAYS[i + 1].t)) idx = i;
+    for (i = 0; i < days.length; i++) days[i].classList.toggle("today", i === idx && now >= E.leave && now < E.home + 6 * 3600000);
+  }
+
+  buildTop(); buildWorld(); buildBJ(); buildDays(); buildTodo(); loadWx(); update();
+  setInterval(update, 1000);
+
+  /* 离线缓存 */
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener("load", function () { try { navigator.serviceWorker.register("/sw.js").catch(function () {}); } catch (e) {} });
+  }
+})();
+</script>
+</body>
+</html>
