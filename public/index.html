@@ -155,6 +155,9 @@ details.route[open] > summary::after { content: "收起 ▴"; }
 .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 9px; border-radius: 999px; }
 .pill.ok { background: var(--ok-bg); color: var(--ok); }
 .pill.wait { background: var(--warn-bg); color: var(--warn); }
+.plan { display: flex; flex-direction: column; gap: 8px; }
+.pl { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; background: var(--bg); }
+.pl .pill { margin-right: 6px; }
 .slack { border-radius: 12px; padding: 10px 12px; font-size: 13.5px; background: var(--ok-bg); }
 .slack.tight { background: var(--warn-bg); }
 .slack b { font-weight: 700; }
@@ -250,7 +253,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
   function md(ms, z) { var p = parts(ms, z); return p.mo + "月" + p.d + "日"; }
   function mdw(ms, z) { return md(ms, z) + " 周" + WD[parts(ms, z).wd]; }
   function dayShift(ms, fromZ, toZ) { return parts(ms, toZ).d - parts(ms, fromZ).d; }
-  function dur(ms) { var m = Math.round(ms / MIN), h = Math.floor(m / 60); return h + " 小时 " + p2(m % 60) + " 分"; }
+  function dur(ms) { var m = Math.round(ms / MIN), h = Math.floor(m / 60); return h ? h + " 小时 " + p2(m % 60) + " 分" : m + " 分钟"; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   /* ---------- 时刻表（全部用带偏移的绝对时间） ---------- */
@@ -273,14 +276,15 @@ details.route[open] > summary::after { content: "收起 ▴"; }
   /* ---------- 地点 ---------- */
   var P = {
     home: { n: "900 rue Saint-Jacques", a: "900 rue Saint-Jacques, Montréal, QC, Canada", q: "900 rue Saint-Jacques, Montréal", ll: "45.5017,-73.5673" },
-    yul: { n: "蒙特利尔-特鲁多国际机场 YUL", a: "975 Boulevard Roméo-Vachon Nord, Dorval, QC H4Y 1H1, Canada", q: "Montréal-Pierre Elliott Trudeau International Airport", ll: "45.4706,-73.7408" },
-    cmn2: { n: "卡萨布兰卡穆罕默德五世国际机场 T2", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 2）", q: "Aéroport Mohammed V Casablanca Terminal 2", ll: "33.3675,-7.5898" },
-    cmn1: { n: "卡萨布兰卡穆罕默德五世国际机场 T1", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 1）", q: "Aéroport Mohammed V Casablanca Terminal 1", ll: "33.3675,-7.5898" },
-    pkx: { n: "北京大兴国际机场 PKX", a: "北京市大兴区，北京大兴国际机场", q: "北京大兴国际机场", ll: "39.5098,116.4105" },
-    pkxs: { n: "大兴机场站（京雄城际）", a: "北京大兴国际机场旁，离航站楼步行约 150 米", q: "大兴机场站", ll: "39.5098,116.4105" },
-    bjw: { n: "北京西站", a: "北京市丰台区莲花池东路 118 号", q: "北京西站", ll: "39.8946,116.3220" },
+    yul: { n: "蒙特利尔-特鲁多国际机场 YUL", a: "975 Boulevard Roméo-Vachon Nord, Dorval, QC H4Y 1H1, Canada", q: "Montréal-Pierre Elliott Trudeau International Airport", ll: "45.4706,-73.7408", pin: 1 },
+    cmn2: { n: "卡萨布兰卡穆罕默德五世国际机场 T2", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 2）", q: "Aéroport Mohammed V Casablanca Terminal 2", ll: "33.3675,-7.5898", pin: 1 },
+    cmn1: { n: "卡萨布兰卡穆罕默德五世国际机场 T1", a: "Aéroport Mohammed V, Nouaceur, Casablanca, Maroc（Terminal 1）", q: "Aéroport Mohammed V Casablanca Terminal 1", ll: "33.3675,-7.5898", pin: 1 },
+    pkx: { n: "北京大兴国际机场 PKX", a: "北京市大兴区，北京大兴国际机场", q: "北京大兴国际机场", ll: "39.5098,116.4105", pin: 1 },
+    pkxs: { n: "大兴机场站（京雄城际）", a: "北京大兴国际机场旁，离航站楼步行约 150 米", q: "大兴机场站", ll: "39.5098,116.4105", pin: 1 },
+    bjw: { n: "北京西站", a: "北京市丰台区莲花池东路 118 号", q: "北京西站", ll: "39.8946,116.3220", pin: 1 },
     hebi: { n: "鹤壁东站", a: "河南省鹤壁市淇滨区朝歌路", q: "鹤壁东站", ll: "35.7478,114.2974" }
   };
+  function guruPin(p) { return "guru://show?place=" + p.ll + ",16"; }
   function guru(p) { return "guru://search?q=" + encodeURIComponent(p.q) + "&coord=" + p.ll; }
 
   /* ---------- 路段颜色 ---------- */
@@ -369,10 +373,11 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     h += '<span class="time">' + hm(o.t, z) + '<small>' + Z[z].utc + '</small></span><span class="rail"><i class="dot"></i></span><div class="body">';
     h += '<b>' + esc(o.title) + '</b>';
     if (o.desc) h += '<span class="desc">' + esc(o.desc) + '</span>';
+    if (o.note) h += '<span class="note">' + esc(o.note) + '</span>';
     if (o.p) h += '<span class="addr">' + esc(o.p.a) + '</span>';
     if (z !== "bj") { var sh = dayShift(o.t, z, "bj"); h += '<span class="bjt">北京时间 ' + md(o.t, "bj") + ' ' + hm(o.t, "bj") + '</span>'; }
     h += '<span class="here">现在在这里</span>';
-    if (o.p) h += '<div class="acts"><a class="btn go" href="' + esc(guru(o.p)) + '">在探途中打开</a><button class="btn" type="button" data-copy="' + esc(o.p.a) + '">复制地址</button></div>';
+    if (o.p) h += '<div class="acts"><a class="btn go" href="' + esc(guru(o.p)) + '">在探途中打开</a>' + (o.p.pin ? '<a class="btn" href="' + esc(guruPin(o.p)) + '">按坐标定位</a>' : '') + '<button class="btn" type="button" data-copy="' + esc(o.p.a) + '">复制地址</button></div>';
     return h + '</div></li>';
   }
   function tkt(o) {
@@ -436,7 +441,7 @@ details.route[open] > summary::after { content: "收起 ▴"; }
       id: "d3", t: E.arr2, z: "bj", title: "北京 → 鹤壁",
       nodes: [
         { t: E.arr2, z: "bj", c: "var(--f2)", title: "AT230 落地大兴机场", desc: "入境、海关、取行李，预计 12:15 到 14:35 办完", p: P.pkx },
-        { t: E.jd, z: "bj", c: "var(--xfer)", title: "最晚此时开始京东邮寄", desc: "在机场内办理，约 70 到 90 分钟", p: P.pkx },
+        { t: E.jd, z: "bj", c: "var(--xfer)", title: "最晚此时开始京东邮寄", desc: "在机场内办理，约 70 到 90 分钟", note: "位置：从到达层出来往右走，路过“米村拌饭”就是京东邮寄点（他人转述，以现场为准）", p: P.pkx },
         { t: E.gate, z: "bj", c: "var(--t1)", title: "最晚到大兴机场站检票口", desc: "发车前 20 分钟，要先过车站安检", p: P.pkxs },
         { t: E.g3942, z: "bj", c: "var(--t1)", title: "G3942 发车", desc: "34 分钟到北京西", p: P.pkxs },
         { t: E.bjw, z: "bj", c: "var(--xfer)", title: "到达北京西站", desc: "出站、安检、检票。距 G555 还有 1 小时 46 分", p: P.bjw },
@@ -445,9 +450,14 @@ details.route[open] > summary::after { content: "收起 ▴"; }
       ],
       tickets: [
         {
-          no: "G3942", line: "复兴号 · 大兴机场 → 北京西", c: "var(--t1)",
+          no: "G3942", line: "Plan A · 复兴号 · 大兴机场 → 北京西", c: "var(--t1)",
           t0: E.g3942, z0: "bj", c0: "大兴机场", n0: "大兴机场站", t1: E.bjw, z1: "bj", c1: "北京西", n1: "北京西站",
           rows: [["状态", '<span class="pill wait">待购票</span> 12306 显示 16:00 起售（北京时间）'], ["站点", "大兴机场站，北京大兴国际机场旁，步行约 150 米"], ["到站台", "<b>16:34 前</b>到检票口（发车前 20 分钟）"], ["票价", "二等座约 24 元起"]]
+        },
+        {
+          no: "C2726", line: "Plan B · 复兴号 · 大兴机场 → 北京西", c: "var(--t1)",
+          t0: T("2026-11-19T17:19:00+08:00"), z0: "bj", c0: "大兴机场", n0: "大兴机场站", t1: T("2026-11-19T17:47:00+08:00"), z1: "bj", c1: "北京西", n1: "北京西站",
+          rows: [["状态", '<span class="pill wait">待购票</span> 12306 显示 16:00 起售（北京时间）'], ["用途", "只在 Plan A 赶不上时乘坐。与 G555 之间换乘 1 小时 27 分"], ["到站台", "<b>16:59 前</b>到检票口（发车前 20 分钟）"], ["票价", "二等座约 30 元起"]]
         },
         {
           no: "G555", line: "北京西 → 鹤壁东 · 二等座约 244 元起", c: "var(--t2)",
@@ -466,14 +476,16 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     var html = DAYS.map(function (d) {
       var h = '<section class="day" id="' + d.id + '" data-start="' + d.t + '"><header class="day-h"><div><span class="dd">' + mdw(d.t, d.z) + '</span><h2>' + esc(d.title) + '</h2></div><span class="tzchip">' + Z[d.z].utc + '</span></header><div class="day-b">';
       h += '<details class="route"><summary>展开今天的路线图</summary><ol class="line">' + d.nodes.map(node).join("") + '</ol></details>';
-      h += d.tickets.map(tkt).join("");
       if (d.slack) {
-        h += '<div class="slack tight"><b>办京东邮寄的时间够不够</b><ul>' +
-          '<li>最顺：约 13:00 办完入境和取行李，邮寄完约 14:15，离发车还有 2 小时 40 分</li>' +
-          '<li>最慢：约 14:35 办完入境和取行李，邮寄 90 分钟到 16:05，再走到检票口，只剩约 15 分钟余量</li>' +
-          '<li>16:05 还没办完，改乘 17:19 的 C2726（北京西 17:47 到），仍能赶上 G555（中间 87 分钟）</li>' +
-          '<li>车票改签以 12306 规则为准，改签前先确认能不能改</li></ul></div>';
+        h += '<div class="plan"><div class="pl"><span class="pill ok">Plan A</span> G3942 大兴机场 16:54 发 → 北京西 17:28 到 → G555 19:14 发。换乘 1 小时 46 分</div>' +
+          '<div class="pl"><span class="pill wait">Plan B</span> C2726 大兴机场 17:19 发 → 北京西 17:47 到 → G555 19:14 发。换乘 1 小时 27 分</div>' +
+          '<div class="slack tight"><b>怎么选</b><ul>' +
+          '<li>京东邮寄 16:05 前办完，走 Plan A。最慢情况下 14:35 办完入境取行李，邮寄 90 分钟办到 16:05，到检票口约有 15 分钟余量</li>' +
+          '<li>16:05 到 16:40 之间才办完，走 Plan B，检票口 16:59 前到</li>' +
+          '<li>两班都赶不上，在 12306 查大兴机场站之后的车次，最晚要在 18:30 前到北京西</li>' +
+          '<li>改签、退票以 12306 规则为准，先确认再操作</li></ul></div></div>';
       }
+      h += d.tickets.map(tkt).join("");
       h += d.wx.map(function (w) { return wxBlock(w[0], w[1]); }).join("");
       h += '<div class="tips"><h3>要准备的东西</h3>' + ul(d.tips) + '</div>';
       h += '<div class="warn"><h3>注意</h3>' + ul(d.warns) + '</div>';
@@ -527,7 +539,8 @@ details.route[open] > summary::after { content: "收起 ▴"; }
     { id: "driver", done: true, t: "约好去蒙特利尔机场的司机", n: "11 月 17 日 16:45 接" },
     { id: "g3942", t: "12306 购买 G3942：大兴机场 → 北京西", n: "11 月 19 日 16:54 发车，12306 显示 16:00 起售（北京时间）" },
     { id: "g555", t: "12306 购买 G555：北京西 → 鹤壁东", n: "11 月 19 日 19:14 发车，12306 显示 8:00 起售（北京时间）" },
-    { id: "jd", t: "向京东确认大兴机场邮寄点位置、营业时间、寄到鹤壁的价格和时效", n: "页面按 70 到 90 分钟估算" },
+    { id: "c2726", t: "12306 同时购买备选 C2726：大兴机场 → 北京西", n: "Plan B，11 月 19 日 17:19 发车，用不上就退票，退票规则以 12306 为准" },
+    { id: "jd", t: "向京东确认大兴机场邮寄点营业时间、价格、寄到鹤壁的时效", n: "位置：到达层出来往右走，路过“米村拌饭”（他人转述，现场核实）。页面按 70 到 90 分钟估算" },
     { id: "transit", t: "核对卡萨布兰卡转机要求", n: "在航司官网确认，护照不同要求不同" },
     { id: "bag", t: "值机时确认两段登机牌和行李牌终点", n: "行李牌终点应是北京 PKX" },
     { id: "maps", t: "在探途下载离线地图：蒙特利尔、卡萨布兰卡、北京、河南鹤壁", n: "断网前下载完，并打开一次确认可搜到地点" },
