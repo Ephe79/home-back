@@ -2,7 +2,7 @@
 var CACHE = "home-back-cache";
 self.addEventListener("install", function (e) {
   e.waitUntil(
-    caches.open(CACHE).then(function (c) { return c.addAll(["/"]); }).then(function () { return self.skipWaiting(); })
+    caches.open(CACHE).then(function (c) { return c.addAll(["/", "/manifest.webmanifest", "/icon-192.png", "/apple-touch-icon.png"]); }).then(function () { return self.skipWaiting(); })
   );
 });
 self.addEventListener("activate", function (e) {
